@@ -95,6 +95,7 @@ impl VM {
                 let val: Value = *self.consts.get(index as usize)
                                              .ok_or_else(|| InterpretationError::BadConstsIndexError(BadConstsIndexError))?;
                 self.stack.push(val);
+                self.pc += 3;
                 
             },
             Instruction::ADD => {
@@ -103,6 +104,7 @@ impl VM {
                 let b = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
                 self.stack.push(a + b);
+                self.pc += 1;
             },
             Instruction::SUB => {
                 let a = self.stack.pop()
@@ -110,6 +112,7 @@ impl VM {
                 let b = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
                 self.stack.push(a - b);
+                self.pc += 1;
             },
             Instruction::MUL => {
                 let a = self.stack.pop()
@@ -117,6 +120,7 @@ impl VM {
                 let b = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
                 self.stack.push(a * b);
+                self.pc += 1;
             },
             Instruction::DIV => {
                 let a = self.stack.pop()
@@ -124,6 +128,7 @@ impl VM {
                 let b = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
                 self.stack.push(a / b);
+                self.pc += 1;
             },
             Instruction::JMP => todo!("Не реализованы"),
             Instruction::JE => todo!("Не реализованы"),
@@ -137,6 +142,7 @@ impl VM {
                 let a = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
                 println!("{a:#}");
+                self.pc += 1;
             },
             Instruction::HLT => {
                 self.running = false;
