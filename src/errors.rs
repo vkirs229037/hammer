@@ -1,4 +1,4 @@
-use std::{fmt, io::Empty};
+use std::fmt;
 
 pub enum InterpretationError {
     OpcodeError(OpcodeError),
@@ -7,14 +7,19 @@ pub enum InterpretationError {
     EmptyStackError(EmptyStackError)
 }
 
-
-pub struct OpcodeError;
-
-impl fmt::Display for OpcodeError {
+impl fmt::Display for InterpretationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "неизвестный код комманды")
+        match self {
+            InterpretationError::OpcodeError(_) => write!(f, "неизвестный код комманды"),
+            InterpretationError::UnexpectedEndError(_) => write!(f, "неожиданный конец программы"),
+            InterpretationError::BadConstsIndexError(_) => write!(f, "индекс таблицы констант вышел за границы"),
+            InterpretationError::EmptyStackError(_) => write!(f, "стек оказался пустым"),
+        }
     }
 }
+
+
+pub struct OpcodeError;
 
 impl From<OpcodeError> for InterpretationError {
     fn from(e: OpcodeError) -> Self {
@@ -25,12 +30,6 @@ impl From<OpcodeError> for InterpretationError {
 
 pub struct UnexpectedEndError;
 
-impl fmt::Display for UnexpectedEndError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "неожиданный конец программы")
-    }
-}
-
 impl From<UnexpectedEndError> for InterpretationError {
     fn from(e: UnexpectedEndError) -> Self {
         InterpretationError::UnexpectedEndError(e)
@@ -40,12 +39,6 @@ impl From<UnexpectedEndError> for InterpretationError {
 
 pub struct BadConstsIndexError;
 
-impl fmt::Display for BadConstsIndexError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "индекс таблицы констант вышел за границы")
-    }
-}
-
 impl From<BadConstsIndexError> for InterpretationError {
     fn from(e: BadConstsIndexError) -> Self {
         InterpretationError::BadConstsIndexError(e)
@@ -54,12 +47,6 @@ impl From<BadConstsIndexError> for InterpretationError {
 
 
 pub struct EmptyStackError;
-
-impl fmt::Display for EmptyStackError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "стек пустой")
-    }
-}
 
 impl From<EmptyStackError> for InterpretationError {
     fn from(e: EmptyStackError) -> Self {
