@@ -14,3 +14,4 @@ JGE - Jump (if) greater (or) equal
 JLE - Jump (if) less (or) equal
 RET - Return. Возврат из функции
 DBG - Debug. Печатает в консоль текущее значение в стеке
+HLT - Halt. Прекращает работу программы

@@ -16,6 +16,7 @@ enum Instruction {
     JLE,
     RET,
     DBG,
+    HLT,
 }
 
 impl TryFrom<u8> for Instruction {
@@ -38,6 +39,7 @@ impl TryFrom<u8> for Instruction {
             0x0c => Ok(Instruction::JLE),
             0x0d => Ok(Instruction::RET),
             0x0e => Ok(Instruction::DBG),
+            0x0f => Ok(Instruction::HLT),
             _ => Err("Not yet handled opcode"),
         }
     }
@@ -46,6 +48,8 @@ impl TryFrom<u8> for Instruction {
 struct VM {
     stack: Vec<Value>,
     program: Vec<Instruction>,
+    consts: Vec<Value>,
+    pc: u32,
 }
 
 fn main() {
