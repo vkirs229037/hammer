@@ -85,6 +85,9 @@ impl VM {
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
                 let b = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                if a == 0f64 {
+                    return Err(InterpretationError::ZeroDivisionError(ZeroDivisionError));
+                }
                 self.stack.push(b / a);
                 self.pc += 1;
             },

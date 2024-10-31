@@ -4,7 +4,8 @@ pub enum InterpretationError {
     OpcodeError(OpcodeError),
     UnexpectedEndError(UnexpectedEndError),
     BadConstsIndexError(BadConstsIndexError),
-    EmptyStackError(EmptyStackError)
+    EmptyStackError(EmptyStackError),
+    ZeroDivisionError(ZeroDivisionError),
 }
 
 impl fmt::Display for InterpretationError {
@@ -14,6 +15,7 @@ impl fmt::Display for InterpretationError {
             InterpretationError::UnexpectedEndError(_) => write!(f, "неожиданный конец программы"),
             InterpretationError::BadConstsIndexError(_) => write!(f, "индекс таблицы констант вышел за границы"),
             InterpretationError::EmptyStackError(_) => write!(f, "стек оказался пустым"),
+            InterpretationError::ZeroDivisionError(_) => write!(f, "деление на 0"),
         }
     }
 }
@@ -51,5 +53,13 @@ pub struct EmptyStackError;
 impl From<EmptyStackError> for InterpretationError {
     fn from(e: EmptyStackError) -> Self {
         InterpretationError::EmptyStackError(e)
+    }
+}
+
+pub struct ZeroDivisionError;
+
+impl From<ZeroDivisionError> for InterpretationError {
+    fn from(e: ZeroDivisionError) -> Self {
+        InterpretationError::ZeroDivisionError(e)
     }
 }
