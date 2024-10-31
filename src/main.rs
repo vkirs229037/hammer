@@ -8,16 +8,16 @@ fn main() {
     let mut vm = VM::new();
     vm.add_const(1f64);
     vm.add_const(3f64);
-    vm.add_const(12f64);
+    vm.add_const(0f64);
     let program: Vec<u8> = vec![0x01,       // PUSH
                                 0x00, 0x00, // 0x0000 -> 1
                                 0x01,       // PUSH
                                 0x01, 0x00, // 0x0001 -> 3
                                 0x02,       // ADD
                                 0x01,       // PUSH
-                                0x02, 0x00, // 0x0002 -> 12
-                                0x05,       // DIV
-                                0x0e,       // DBG -> 0.333333...
+                                0x02, 0x00, // 0x0002 -> 0
+                                0x05,       // DIV -> Ошибка о делении на 0
+                                0x0e,       // DBG
                                 0x0f];      // HLT
     vm.load_program(program);
     
