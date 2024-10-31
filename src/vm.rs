@@ -2,6 +2,33 @@ use crate::instruction::*;
 use crate::errors::*;
 type Value = f64;
 
+#[macro_use]
+mod vm_macros {
+    macro_rules! exec_jump {
+        ($vm:ident, $op:tt) => {
+            let offset: u16 = $vm.next_2_bytes()?;
+
+            let a = $vm.pop_stack()?;
+            let b = $vm.pop_stack()?;
+                    
+            if b $op a {
+                $vm.pc += offset as usize;
+            } else {
+                $vm.pc += 3;
+            }
+        }
+    }
+
+    macro_rules! exec_binop {
+        ($vm:ident, $op:tt) => {
+            let a = $vm.pop_stack()?;
+            let b = $vm.pop_stack()?;
+            $vm.stack.push(a $op b);
+        };
+    }
+}
+
+
 pub struct VM {
     stack: Vec<Value>,
     program: Vec<u8>,
@@ -38,53 +65,32 @@ impl VM {
     }
 
     fn run_one_instr(&mut self) -> Result<(), InterpretationError> {
-        let inst: Instruction = self.program.get(self.pc)
-                                            .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?
-                                            .clone()
-                                            .try_into()?;
+        let inst: Instruction = self.get_byte(0)?
+                                    .try_into()?;
         match inst {
             Instruction::NOP => { },
             Instruction::PUSH => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let index: u16 = u16::from_ne_bytes([b1, b2]);
-                let val: Value = *self.consts.get(index as usize)
-                                             .ok_or_else(|| InterpretationError::BadConstsIndexError(BadConstsIndexError))?;
+                let index: u16 = self.next_2_bytes()?;
+                let val: Value = self.get_const(index as usize)?;
                 self.stack.push(val);
                 self.pc += 3;
                 
             },
             Instruction::ADD => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                self.stack.push(a + b);
+                exec_binop!(self, +);
                 self.pc += 1;
             },
             Instruction::SUB => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                self.stack.push(b - a);
+                exec_binop!(self, -);
                 self.pc += 1;
             },
             Instruction::MUL => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                self.stack.push(a * b);
+                exec_binop!(self, *);
                 self.pc += 1;
             },
             Instruction::DIV => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 if a == 0f64 {
                     return Err(InterpretationError::ZeroDivisionError(ZeroDivisionError));
                 }
@@ -92,125 +98,30 @@ impl VM {
                 self.pc += 1;
             },
             Instruction::JMP => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+                let offset: u16 = self.next_2_bytes()?;
                 self.pc += offset as usize;
             },
             Instruction::JE => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
-
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                
-                if b == a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, ==);
             },
             Instruction::JNE => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
-
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                
-                if b != a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, !=);
             },
             Instruction::JG => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
-
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                
-                if b > a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, >);
             },
             Instruction::JL => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
-
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                
-                if b < a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, <);
             },
             Instruction::JGE => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
-
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                
-                if b >= a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, >=);
             },
             Instruction::JLE => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
-
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                
-                if b <= a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, <=);
             },
             Instruction::RET => todo!("Не реализованы"),
             Instruction::DBG => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
                 println!("{a:#}");
                 self.pc += 1;
             },
@@ -219,5 +130,28 @@ impl VM {
             },
         }
         Ok(())
+    }
+
+    fn get_byte(self: &VM, offset: usize) -> Result<u8, InterpretationError> {
+        self.program.get(self.pc+offset)
+                    .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))
+                    .copied()
+    }
+
+    fn next_2_bytes(self: &VM) -> Result<u16, InterpretationError> {
+        let b1: u8 = self.get_byte(1)?;
+        let b2: u8 = self.get_byte(2)?;
+        Ok(u16::from_ne_bytes([b1, b2]))
+    }
+
+    fn get_const(self: &VM, index: usize) -> Result<Value, InterpretationError> {
+        self.consts.get(index as usize)
+                   .ok_or_else(|| InterpretationError::BadConstsIndexError(BadConstsIndexError))
+                   .copied()
+    }
+
+    fn pop_stack(self: &mut VM) -> Result<Value, InterpretationError> {
+        self.stack.pop()
+                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))
     }
 }
