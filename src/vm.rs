@@ -69,7 +69,7 @@ impl VM {
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
                 let b = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                self.stack.push(a - b);
+                self.stack.push(b - a);
                 self.pc += 1;
             },
             Instruction::MUL => {
@@ -85,7 +85,7 @@ impl VM {
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
                 let b = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                self.stack.push(a / b);
+                self.stack.push(b / a);
                 self.pc += 1;
             },
             Instruction::JMP => todo!("Не реализованы"),
