@@ -43,9 +43,7 @@ impl VM {
         match inst {
             Instruction::NOP => { },
             Instruction::PUSH => {
-                let b1: u8 = self.get_byte(1)?;
-                let b2: u8 = self.get_byte(2)?;
-                let index: u16 = u16::from_ne_bytes([b1, b2]);
+                let index: u16 = self.next_2_bytes()?;
                 let val: Value = self.get_const(index as usize)?;
                 self.stack.push(val);
                 self.pc += 3;
@@ -87,15 +85,11 @@ impl VM {
                 self.pc += 1;
             },
             Instruction::JMP => {
-                let b1: u8 = self.get_byte(1)?;
-                let b2: u8 = self.get_byte(2)?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+                let offset: u16 = self.next_2_bytes()?;
                 self.pc += offset as usize;
             },
             Instruction::JE => {
-                let b1: u8 = self.get_byte(1)?;
-                let b2: u8 = self.get_byte(2)?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+                let offset: u16 = self.next_2_bytes()?;
 
                 let a = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
@@ -109,9 +103,7 @@ impl VM {
                 }
             },
             Instruction::JNE => {
-                let b1: u8 = self.get_byte(1)?;
-                let b2: u8 = self.get_byte(2)?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+                let offset: u16 = self.next_2_bytes()?;
 
                 let a = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
@@ -125,9 +117,7 @@ impl VM {
                 }
             },
             Instruction::JG => {
-                let b1: u8 = self.get_byte(1)?;
-                let b2: u8 = self.get_byte(2)?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+                let offset: u16 = self.next_2_bytes()?;
 
                 let a = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
@@ -141,9 +131,7 @@ impl VM {
                 }
             },
             Instruction::JL => {
-                let b1: u8 = self.get_byte(1)?;
-                let b2: u8 = self.get_byte(2)?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+                let offset: u16 = self.next_2_bytes()?;
 
                 let a = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
@@ -157,9 +145,7 @@ impl VM {
                 }
             },
             Instruction::JGE => {
-                let b1: u8 = self.get_byte(1)?;
-                let b2: u8 = self.get_byte(2)?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+                let offset: u16 = self.next_2_bytes()?;
 
                 let a = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
@@ -173,9 +159,7 @@ impl VM {
                 }
             },
             Instruction::JLE => {
-                let b1: u8 = self.get_byte(1)?;
-                let b2: u8 = self.get_byte(2)?;
-                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+                let offset: u16 = self.next_2_bytes()?;
 
                 let a = self.stack.pop()
                                   .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
@@ -206,6 +190,12 @@ impl VM {
         self.program.get(self.pc+offset)
                     .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))
                     .copied()
+    }
+
+    fn next_2_bytes(self: &VM) -> Result<u16, InterpretationError> {
+        let b1: u8 = self.get_byte(1)?;
+        let b2: u8 = self.get_byte(2)?;
+        Ok(u16::from_ne_bytes([b1, b2]))
     }
 
     fn get_const(self: &VM, index: usize) -> Result<Value, InterpretationError> {
