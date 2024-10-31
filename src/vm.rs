@@ -2,6 +2,33 @@ use crate::instruction::*;
 use crate::errors::*;
 type Value = f64;
 
+#[macro_use]
+mod vm_macros {
+    macro_rules! exec_jump {
+        ($vm:ident, $op:tt) => {
+            let offset: u16 = $vm.next_2_bytes()?;
+
+            let a = $vm.pop_stack()?;
+            let b = $vm.pop_stack()?;
+                    
+            if b $op a {
+                $vm.pc += offset as usize;
+            } else {
+                $vm.pc += 3;
+            }
+        }
+    }
+
+    macro_rules! exec_binop {
+        ($vm:ident, $op:tt) => {
+            let a = $vm.pop_stack()?;
+            let b = $vm.pop_stack()?;
+            $vm.stack.push(a $op b);
+        };
+    }
+}
+
+
 pub struct VM {
     stack: Vec<Value>,
     program: Vec<u8>,
@@ -50,21 +77,15 @@ impl VM {
                 
             },
             Instruction::ADD => {
-                let a = self.pop_stack()?;
-                let b = self.pop_stack()?;
-                self.stack.push(a + b);
+                exec_binop!(self, +);
                 self.pc += 1;
             },
             Instruction::SUB => {
-                let a = self.pop_stack()?;
-                let b = self.pop_stack()?;
-                self.stack.push(b - a);
+                exec_binop!(self, -);
                 self.pc += 1;
             },
             Instruction::MUL => {
-                let a = self.pop_stack()?;
-                let b = self.pop_stack()?;
-                self.stack.push(a * b);
+                exec_binop!(self, *);
                 self.pc += 1;
             },
             Instruction::DIV => {
@@ -81,76 +102,22 @@ impl VM {
                 self.pc += offset as usize;
             },
             Instruction::JE => {
-                let offset: u16 = self.next_2_bytes()?;
-
-                let a = self.pop_stack()?;
-                let b = self.pop_stack()?;
-                
-                if b == a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, ==);
             },
             Instruction::JNE => {
-                let offset: u16 = self.next_2_bytes()?;
-
-                let a = self.pop_stack()?;
-                let b = self.pop_stack()?;
-                
-                if b != a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, !=);
             },
             Instruction::JG => {
-                let offset: u16 = self.next_2_bytes()?;
-
-                let a = self.pop_stack()?;
-                let b = self.pop_stack()?;
-                
-                if b > a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, >);
             },
             Instruction::JL => {
-                let offset: u16 = self.next_2_bytes()?;
-
-                let a = self.pop_stack()?;
-                let b = self.pop_stack()?;
-                
-                if b < a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, <);
             },
             Instruction::JGE => {
-                let offset: u16 = self.next_2_bytes()?;
-
-                let a = self.pop_stack()?;
-                let b = self.pop_stack()?;
-                
-                if b >= a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, >=);
             },
             Instruction::JLE => {
-                let offset: u16 = self.next_2_bytes()?;
-
-                let a = self.pop_stack()?;
-                let b = self.pop_stack()?;
-                
-                if b <= a {
-                    self.pc += offset as usize;
-                } else {
-                    self.pc += 3;
-                }
+                exec_jump!(self, <=);
             },
             Instruction::RET => todo!("Не реализованы"),
             Instruction::DBG => {
