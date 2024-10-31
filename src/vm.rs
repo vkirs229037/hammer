@@ -38,17 +38,13 @@ impl VM {
     }
 
     fn run_one_instr(&mut self) -> Result<(), InterpretationError> {
-        let inst: Instruction = self.program.get(self.pc)
-                                            .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?
-                                            .clone()
-                                            .try_into()?;
+        let inst: Instruction = self.get_byte(0)?
+                                    .try_into()?;
         match inst {
             Instruction::NOP => { },
             Instruction::PUSH => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b1: u8 = self.get_byte(1)?;
+                let b2: u8 = self.get_byte(2)?;
                 let index: u16 = u16::from_ne_bytes([b1, b2]);
                 let val: Value = *self.consts.get(index as usize)
                                              .ok_or_else(|| InterpretationError::BadConstsIndexError(BadConstsIndexError))?;
@@ -92,18 +88,14 @@ impl VM {
                 self.pc += 1;
             },
             Instruction::JMP => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b1: u8 = self.get_byte(1)?;
+                let b2: u8 = self.get_byte(2)?;
                 let offset: u16 = u16::from_ne_bytes([b1, b2]);
                 self.pc += offset as usize;
             },
             Instruction::JE => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b1: u8 = self.get_byte(1)?;
+                let b2: u8 = self.get_byte(2)?;
                 let offset: u16 = u16::from_ne_bytes([b1, b2]);
 
                 let a = self.stack.pop()
@@ -118,10 +110,8 @@ impl VM {
                 }
             },
             Instruction::JNE => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b1: u8 = self.get_byte(1)?;
+                let b2: u8 = self.get_byte(2)?;
                 let offset: u16 = u16::from_ne_bytes([b1, b2]);
 
                 let a = self.stack.pop()
@@ -136,10 +126,8 @@ impl VM {
                 }
             },
             Instruction::JG => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b1: u8 = self.get_byte(1)?;
+                let b2: u8 = self.get_byte(2)?;
                 let offset: u16 = u16::from_ne_bytes([b1, b2]);
 
                 let a = self.stack.pop()
@@ -154,10 +142,8 @@ impl VM {
                 }
             },
             Instruction::JL => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b1: u8 = self.get_byte(1)?;
+                let b2: u8 = self.get_byte(2)?;
                 let offset: u16 = u16::from_ne_bytes([b1, b2]);
 
                 let a = self.stack.pop()
@@ -172,10 +158,8 @@ impl VM {
                 }
             },
             Instruction::JGE => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b1: u8 = self.get_byte(1)?;
+                let b2: u8 = self.get_byte(2)?;
                 let offset: u16 = u16::from_ne_bytes([b1, b2]);
 
                 let a = self.stack.pop()
@@ -190,10 +174,8 @@ impl VM {
                 }
             },
             Instruction::JLE => {
-                let b1: u8 = *self.program.get(self.pc+1)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
-                let b2: u8 = *self.program.get(self.pc+2)
-                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b1: u8 = self.get_byte(1)?;
+                let b2: u8 = self.get_byte(2)?;
                 let offset: u16 = u16::from_ne_bytes([b1, b2]);
 
                 let a = self.stack.pop()
@@ -219,5 +201,11 @@ impl VM {
             },
         }
         Ok(())
+    }
+
+    fn get_byte(self: &VM, offset: usize) -> Result<u8, InterpretationError> {
+        self.program.get(self.pc+offset)
+                    .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))
+                    .copied()
     }
 }
