@@ -39,8 +39,8 @@ impl TryFrom<u8> for Instruction {
             0x0b => Ok(Instruction::JGE),
             0x0c => Ok(Instruction::JLE),
             0x0d => Ok(Instruction::RET),
-            0x0e => Ok(Instruction::DBG),
-            0x0f => Ok(Instruction::HLT),
+            0xfe => Ok(Instruction::DBG),
+            0xff => Ok(Instruction::HLT),
             _ => Err(InterpretationError::OpcodeError),
         }
     }
