@@ -91,10 +91,34 @@ impl VM {
                 self.stack.push(b / a);
                 self.pc += 1;
             },
-            Instruction::JMP => todo!("Не реализованы"),
+            Instruction::JMP => {
+                let b1: u8 = *self.program.get(self.pc+1)
+                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b2: u8 = *self.program.get(self.pc+2)
+                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+                self.pc += offset as usize;
+            },
             Instruction::JE => todo!("Не реализованы"),
             Instruction::JNE => todo!("Не реализованы"),
-            Instruction::JG => todo!("Не реализованы"),
+            Instruction::JG => {
+                let b1: u8 = *self.program.get(self.pc+1)
+                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let b2: u8 = *self.program.get(self.pc+2)
+                                          .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))?;
+                let offset: u16 = u16::from_ne_bytes([b1, b2]);
+
+                let a = self.stack.pop()
+                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let b = self.stack.pop()
+                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                
+                if b > a {
+                    self.pc += offset as usize;
+                } else {
+                    self.pc += 3;
+                }
+            },
             Instruction::JL => todo!("Не реализованы"),
             Instruction::JGE => todo!("Не реализованы"),
             Instruction::JLE => todo!("Не реализованы"),

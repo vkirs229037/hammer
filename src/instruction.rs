@@ -1,5 +1,6 @@
 use crate::errors::*;
 
+#[derive(Debug)]
 pub enum Instruction {
     NOP,
     PUSH,
