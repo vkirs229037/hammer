@@ -6,12 +6,8 @@ MUL - Multiply. Умножение
 DIV - Divide. Деление
 Для всех команд перехода предполагается, что в байт-коде следующим значением будет являться offset (2 байта). 
 JMP - Jump. Безусловный переход
-JE - Jump (if) equal. Переход, если 2 значения со стека равны
-JNE - Jump (if) not equal. Переход, если 2 значения со стека неравны
-JG - Jump (if) greater
-JL - Jump (if) lesser
-JGE - Jump (if) greater (or) equal
-JLE - Jump (if) less (or) equal
+JF - Jump (if) false. Переход, если на стеке значение false (пока что 0).
+JBACK - Jump back. Переход назад. 
 RET - Return. Возврат из функции
 DBG - Debug. Печатает в консоль текущее значение в стеке
 HLT - Halt. Прекращает работу программы
