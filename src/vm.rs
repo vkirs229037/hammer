@@ -46,8 +46,7 @@ impl VM {
                 let b1: u8 = self.get_byte(1)?;
                 let b2: u8 = self.get_byte(2)?;
                 let index: u16 = u16::from_ne_bytes([b1, b2]);
-                let val: Value = *self.consts.get(index as usize)
-                                             .ok_or_else(|| InterpretationError::BadConstsIndexError(BadConstsIndexError))?;
+                let val: Value = self.get_const(index as usize)?;
                 self.stack.push(val);
                 self.pc += 3;
                 
@@ -207,5 +206,11 @@ impl VM {
         self.program.get(self.pc+offset)
                     .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))
                     .copied()
+    }
+
+    fn get_const(self: &VM, index: usize) -> Result<Value, InterpretationError> {
+        self.consts.get(index as usize)
+                   .ok_or_else(|| InterpretationError::BadConstsIndexError(BadConstsIndexError))
+                   .copied()
     }
 }
