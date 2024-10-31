@@ -50,34 +50,26 @@ impl VM {
                 
             },
             Instruction::ADD => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 self.stack.push(a + b);
                 self.pc += 1;
             },
             Instruction::SUB => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 self.stack.push(b - a);
                 self.pc += 1;
             },
             Instruction::MUL => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 self.stack.push(a * b);
                 self.pc += 1;
             },
             Instruction::DIV => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 if a == 0f64 {
                     return Err(InterpretationError::ZeroDivisionError(ZeroDivisionError));
                 }
@@ -91,10 +83,8 @@ impl VM {
             Instruction::JE => {
                 let offset: u16 = self.next_2_bytes()?;
 
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 
                 if b == a {
                     self.pc += offset as usize;
@@ -105,10 +95,8 @@ impl VM {
             Instruction::JNE => {
                 let offset: u16 = self.next_2_bytes()?;
 
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 
                 if b != a {
                     self.pc += offset as usize;
@@ -119,10 +107,8 @@ impl VM {
             Instruction::JG => {
                 let offset: u16 = self.next_2_bytes()?;
 
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 
                 if b > a {
                     self.pc += offset as usize;
@@ -133,10 +119,8 @@ impl VM {
             Instruction::JL => {
                 let offset: u16 = self.next_2_bytes()?;
 
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 
                 if b < a {
                     self.pc += offset as usize;
@@ -147,10 +131,8 @@ impl VM {
             Instruction::JGE => {
                 let offset: u16 = self.next_2_bytes()?;
 
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 
                 if b >= a {
                     self.pc += offset as usize;
@@ -161,10 +143,8 @@ impl VM {
             Instruction::JLE => {
                 let offset: u16 = self.next_2_bytes()?;
 
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
-                let b = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
+                let b = self.pop_stack()?;
                 
                 if b <= a {
                     self.pc += offset as usize;
@@ -174,8 +154,7 @@ impl VM {
             },
             Instruction::RET => todo!("Не реализованы"),
             Instruction::DBG => {
-                let a = self.stack.pop()
-                                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))?;
+                let a = self.pop_stack()?;
                 println!("{a:#}");
                 self.pc += 1;
             },
@@ -202,5 +181,10 @@ impl VM {
         self.consts.get(index as usize)
                    .ok_or_else(|| InterpretationError::BadConstsIndexError(BadConstsIndexError))
                    .copied()
+    }
+
+    fn pop_stack(self: &mut VM) -> Result<Value, InterpretationError> {
+        self.stack.pop()
+                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))
     }
 }
