@@ -92,7 +92,7 @@ impl VM {
                 let a = self.pop_stack()?;
                 let b = self.pop_stack()?;
                 if a == 0f64 {
-                    return Err(InterpretationError::ZeroDivisionError(ZeroDivisionError));
+                    return Err(InterpretationError::ZeroDivisionError);
                 }
                 self.stack.push(b / a);
                 self.pc += 1;
@@ -134,7 +134,7 @@ impl VM {
 
     fn get_byte(self: &VM, offset: usize) -> Result<u8, InterpretationError> {
         self.program.get(self.pc+offset)
-                    .ok_or_else(|| InterpretationError::UnexpectedEndError(UnexpectedEndError))
+                    .ok_or_else(|| InterpretationError::UnexpectedEndError)
                     .copied()
     }
 
@@ -146,12 +146,12 @@ impl VM {
 
     fn get_const(self: &VM, index: usize) -> Result<Value, InterpretationError> {
         self.consts.get(index as usize)
-                   .ok_or_else(|| InterpretationError::BadConstsIndexError(BadConstsIndexError))
+                   .ok_or_else(|| InterpretationError::BadConstsIndexError)
                    .copied()
     }
 
     fn pop_stack(self: &mut VM) -> Result<Value, InterpretationError> {
         self.stack.pop()
-                  .ok_or_else(|| InterpretationError::EmptyStackError(EmptyStackError))
+                  .ok_or_else(|| InterpretationError::EmptyStackError)
     }
 }
