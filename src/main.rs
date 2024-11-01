@@ -1,8 +1,5 @@
-mod errors;
-mod instruction;
 mod vm;
-
-use vm::*;
+use crate::vm::vm::VM;
 
 fn main() {
     let mut vm = VM::new();

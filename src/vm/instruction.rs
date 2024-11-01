@@ -1,4 +1,4 @@
-use crate::errors::*;
+use crate::vm::errors::*;
 
 #[derive(Debug)]
 pub enum Instruction {
