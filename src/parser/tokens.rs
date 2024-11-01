@@ -25,7 +25,9 @@ pub struct Loc {
 impl Loc {
     pub fn new(file: String, line: usize, col: usize) -> Self {
         Self {
-            file, line, col
+            file, 
+            line: line+1, 
+            col: col+1
         }
     }
 }
