@@ -115,7 +115,6 @@ impl VM {
                 let offset: u16 = self.next_2_bytes()?;
                 self.pc -= offset as usize;
             }
-            Instruction::RET => todo!("Не реализованы"),
             Instruction::DBG => {
                 let a = self.pop_stack()?;
                 println!("{a:#}");
