@@ -10,6 +10,7 @@ pub enum TokenType {
     ParenLeft,
     ParenRight,
     Semicolon,
+    Eof,
 }
 
 use TokenType::*;
@@ -48,6 +49,7 @@ impl fmt::Display for Token {
             ParenLeft => write!(f, "[{loc}] ("),
             ParenRight => write!(f, "[{loc}] )"),
             Semicolon => write!(f, "[{loc}] ;"),
+            Eof => write!(f, "[{loc}]"),
         }
     }
 }
