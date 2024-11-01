@@ -15,10 +15,19 @@ pub enum TokenType {
 
 use TokenType::*;
 
+#[derive(Clone)]
 pub struct Loc {
     file: String,
     line: usize,
     col: usize,
+}
+
+impl Loc {
+    pub fn new(file: String, line: usize, col: usize) -> Self {
+        Self {
+            file, line, col
+        }
+    }
 }
 
 impl fmt::Display for Loc {
@@ -33,6 +42,14 @@ impl fmt::Display for Loc {
 pub struct Token {
     ttype: TokenType,
     loc: Loc,
+}
+
+impl Token {
+    pub fn new(ttype: TokenType, loc: Loc) -> Self {
+        Self {
+            ttype, loc
+        }
+    }
 }
 
 impl fmt::Display for Token {
