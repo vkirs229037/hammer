@@ -1,7 +1,7 @@
 mod vm;
 mod parser;
 
-use crate::vm::vm::VM;
+use parser::lexer::Lexer;
 
 fn main() {
     /*
@@ -33,5 +33,16 @@ fn main() {
         Err(e) => println!("Ошибка: {e}"),
     }
     */
-    let program: &str = "print(4 / 3 + 6 * (7 + 1));";
+    let program = String::from("4 / 3 + 6 * (7 + 1);");
+    let mut lexer = Lexer::new("module".to_owned(), program);
+    match lexer.lex() {
+        Ok(()) => {
+            println!("Все хорошо:)");
+            let tokens = lexer.tokens();
+            for token in tokens {
+                println!("{token}")
+            }
+        },
+        Err(e) => println!("Ошибка: {e}")
+    }
 }
