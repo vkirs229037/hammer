@@ -4,26 +4,12 @@ type Value = f64;
 
 #[macro_use]
 mod vm_macros {
-    macro_rules! exec_jump {
-        ($vm:ident, $op:tt) => {
-            let offset: u16 = $vm.next_2_bytes()?;
-
-            let a = $vm.pop_stack()?;
-            let b = $vm.pop_stack()?;
-                    
-            if b $op a {
-                $vm.pc += offset as usize;
-            } else {
-                $vm.pc += 3;
-            }
-        }
-    }
-
     macro_rules! exec_binop {
         ($vm:ident, $op:tt) => {
             let a = $vm.pop_stack()?;
             let b = $vm.pop_stack()?;
-            $vm.stack.push(a $op b);
+            $vm.stack.push((b $op a).into());
+            $vm.pc += 1;
         };
     }
 }
@@ -78,15 +64,12 @@ impl VM {
             },
             Instruction::ADD => {
                 exec_binop!(self, +);
-                self.pc += 1;
             },
             Instruction::SUB => {
                 exec_binop!(self, -);
-                self.pc += 1;
             },
             Instruction::MUL => {
                 exec_binop!(self, *);
-                self.pc += 1;
             },
             Instruction::DIV => {
                 let a = self.pop_stack()?;
@@ -97,29 +80,41 @@ impl VM {
                 self.stack.push(b / a);
                 self.pc += 1;
             },
+            Instruction::EQ => {
+                exec_binop!(self, ==);
+            },
+            Instruction::NEQ => {
+                exec_binop!(self, !=);
+            },
+            Instruction::GR => {
+                exec_binop!(self, >);
+            },
+            Instruction::LS => {
+                exec_binop!(self, <);
+            },
+            Instruction::GE => {
+                exec_binop!(self, >=);
+            },
+            Instruction::LE => {
+                exec_binop!(self, <=);
+            },
             Instruction::JMP => {
                 let offset: u16 = self.next_2_bytes()?;
                 self.pc += offset as usize;
             },
-            Instruction::JE => {
-                exec_jump!(self, ==);
+            Instruction::JF => {
+                let offset: u16 = self.next_2_bytes()?;
+                let a = self.pop_stack()?;
+                if a == 0f64 {
+                    self.pc += offset as usize;
+                } else {
+                    self.pc += 3;
+                }
             },
-            Instruction::JNE => {
-                exec_jump!(self, !=);
-            },
-            Instruction::JG => {
-                exec_jump!(self, >);
-            },
-            Instruction::JL => {
-                exec_jump!(self, <);
-            },
-            Instruction::JGE => {
-                exec_jump!(self, >=);
-            },
-            Instruction::JLE => {
-                exec_jump!(self, <=);
-            },
-            Instruction::RET => todo!("Не реализованы"),
+            Instruction::JBACK => {
+                let offset: u16 = self.next_2_bytes()?;
+                self.pc -= offset as usize;
+            }
             Instruction::DBG => {
                 let a = self.pop_stack()?;
                 println!("{a:#}");
