@@ -1,22 +1,22 @@
 use std::fmt;
-use crate::parser::tokens::Token;
+use crate::parser::tokens::Loc;
 
 pub enum LexError {
-    MalformedNumLit(Token),
-    UnexpectedToken(Token),
-    UnmatchedParens(Token),
-    UnexpectedEOF(Token),
-    UnknownLexem(Token),
+    MalformedNumLit(Loc),
+    UnexpectedToken(Loc),
+    UnmatchedParens(Loc),
+    UnexpectedEOF(Loc),
+    UnknownLexem(Loc),
 }
 
 impl fmt::Display for LexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::MalformedNumLit(t) => write!(f, "неправильный float литерал {t}"),
-            Self::UnexpectedToken(t) => write!(f, "неожиданное появление {t}"),
-            Self::UnmatchedParens(t) => write!(f, "скобки были неверно расставлены {t}"),
-            Self::UnexpectedEOF(t) => write!(f, "неожиданный конец файла {t}"),
-            Self::UnknownLexem(t) => write!(f, "неизвестная лексема {t}"),
+            Self::MalformedNumLit(loc) => write!(f, "[{loc}] неправильный float литерал"),
+            Self::UnexpectedToken(loc) => write!(f, "[{loc}] неожиданное появление"),
+            Self::UnmatchedParens(loc) => write!(f, "[{loc}] скобки были неверно расставлены"),
+            Self::UnexpectedEOF(loc) => write!(f, "[{loc}] неожиданный конец файла"),
+            Self::UnknownLexem(loc) => write!(f, "[{loc}] неизвестная лексема"),
         }
     }
 }
