@@ -1,4 +1,6 @@
 mod vm;
+mod parser;
+
 use crate::vm::vm::VM;
 
 fn main() {
