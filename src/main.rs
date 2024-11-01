@@ -4,6 +4,7 @@ mod parser;
 use crate::vm::vm::VM;
 
 fn main() {
+    /*
     let mut vm = VM::new();
     vm.add_const(20f64);
     vm.add_const(10f64);
@@ -31,4 +32,6 @@ fn main() {
         Ok(()) => println!("Все хорошо:)"),
         Err(e) => println!("Ошибка: {e}"),
     }
+    */
+    let program: &str = "print(4 / 3 + 6 * (7 + 1));";
 }
