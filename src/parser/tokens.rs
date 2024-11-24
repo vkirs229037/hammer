@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum TokenType {
     Ident(String),
     NumLit(f64),
@@ -16,7 +16,7 @@ pub enum TokenType {
 
 use TokenType::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Loc {
     file: String,
     line: usize,
@@ -42,7 +42,7 @@ impl fmt::Display for Loc {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Token {
     pub ttype: TokenType,
     pub loc: Loc,
