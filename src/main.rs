@@ -52,7 +52,7 @@ fn main() {
     match ast_builder.parse() {
         Ok(()) => { 
             println!("Все хорошо:)");
-            let tree = ast_builder.tree;
+            let tree = ast_builder.tree();
             println!("{tree:#?}");
         },
         Err(e) => println!("Ошибка: {e}"),
