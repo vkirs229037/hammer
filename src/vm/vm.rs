@@ -1,7 +1,7 @@
 use crate::vm::errors::*;
 use crate::vm::instruction::*;
 
-type Value = f64;
+pub type Value = f64;
 
 #[macro_use]
 mod vm_macros {
