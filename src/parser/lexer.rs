@@ -25,7 +25,7 @@ impl Lexer {
     pub fn lex(&mut self) -> Result<(), LexError> {
         let source = self.source.clone();
         let mut source_iter = source.chars().peekable();
-        let mut buf = String::new();
+        let mut buf;
         while let Some(c) = source_iter.next() {
             match c {
                 c if c == '\n' => { 
@@ -35,13 +35,15 @@ impl Lexer {
                 c if c.is_whitespace() => self.col += 1,
                 c if c.is_alphabetic() => {
                     buf = Self::collect_token(c, &mut source_iter, |c| c.is_alphanumeric());
-                    self.parse_ident(&buf)?;
-                    self.col += buf.len();
+                    let len = buf.len();
+                    self.parse_ident(buf)?;
+                    self.col += len;
                 },
                 c if c.is_digit(10) => {
                     buf = Self::collect_token(c, &mut source_iter, |c| c.is_digit(10) || c == '.' || c == '-');
-                    self.parse_numlit(&buf)?;
-                    self.col += buf.len();
+                    let len = buf.len();
+                    self.parse_numlit(buf)?;
+                    self.col += len;
                 },
                 '+' => { self.push_token(TokenType::OpPlus); self.col += 1; }
                 '-' => { self.push_token(TokenType::OpMinus); self.col += 1; }
@@ -61,13 +63,13 @@ impl Lexer {
         iter::once(c).chain(iter::from_fn(|| iterator.by_ref().next_if(|x| func(*x)))).collect()
     }
 
-    fn parse_ident(&mut self, buf: &String) -> Result<Token, LexError> {
+    fn parse_ident(&mut self, buf: String) -> Result<Token, LexError> {
         match buf.as_str() {
             _ => todo!("Идентификаторы пока что не поддерживаются")
         }
     }
 
-    fn parse_numlit(&mut self, buf: &String) -> Result<(), LexError> {
+    fn parse_numlit(&mut self, buf: String) -> Result<(), LexError> {
         let loc = Loc::new(self.file.clone(), self.line, self.col);
         let value = buf.parse().map_err(|_| LexError::MalformedNumLit(loc.clone()))?;
         let token = Token::new(TokenType::NumLit(value), loc);
