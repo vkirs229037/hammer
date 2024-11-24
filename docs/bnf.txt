@@ -1,0 +1,12 @@
+<expr> -> <comp>
+<comp> -> <term> COMP_OP <comp> | <term>
+<term> -> <factor> TERM_OP <term> | <factor>
+<factor> -> <unary> FACT_OP <factor> | <unary>
+<unary> -> UNARY_OP <unary> | <primary>
+<primary> -> NUMBER | "(" <expr> ")"
+
+COMP_OP := >=, <=, >, <, ==, !=
+TERM_OP := +, -
+FACT_OP := *, /
+UNARY_OP := -
+NUMBER := 0, 1, ..., 
