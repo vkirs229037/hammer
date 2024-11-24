@@ -1,7 +1,9 @@
 mod vm;
 mod parser;
+mod utils;
 
 use parser::lexer::Lexer;
+use parser::ast::AstBuilder;
 
 fn main() {
     /*
@@ -33,7 +35,7 @@ fn main() {
         Err(e) => println!("Ошибка: {e}"),
     }
     */
-    let program = String::from("4 / 3 + 6 * (7 + 1);");
+    let program = String::from("-4 / 3 + 6 * (7 - 1);");
     let mut lexer = Lexer::new("module".to_owned(), program);
     match lexer.lex() {
         Ok(()) => {
@@ -45,4 +47,13 @@ fn main() {
         },
         Err(e) => println!("Ошибка: {e}")
     }
+    let mut ast_builder = AstBuilder::new(lexer.tokens().to_vec());
+    match ast_builder.parse() {
+        Ok(()) => { 
+            println!("Все хорошо:)");
+            let tree = ast_builder.tree;
+            println!("{tree:#?}");
+        },
+        Err(e) => println!("Ошибка: {e}"),
+    };
 }
