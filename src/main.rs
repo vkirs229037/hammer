@@ -1,5 +1,6 @@
 mod vm;
 mod parser;
+mod utils;
 
 use parser::lexer::Lexer;
 use parser::ast::AstBuilder;
