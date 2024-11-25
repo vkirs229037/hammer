@@ -4,7 +4,8 @@ mod utils;
 mod compile;
 
 use parser::lexer::Lexer;
-use parser::ast::AstBuilder;
+use parser::ast::{AstBuilder, AstNode};
+use compile::compiler::Compiler;
 
 fn main() {
     /*
@@ -57,4 +58,16 @@ fn main() {
         },
         Err(e) => println!("Ошибка: {e}"),
     };
+    let tree = ast_builder.tree();
+    let mut compiler = match Compiler::new(&tree, String::from("../../out/out")) {
+        Ok(c) => c,
+        Err(e) => { 
+            println!("ошибка: {e}"); 
+            return 
+        }
+    };
+    match compiler.compile() {
+        Ok(()) => println!("Все хорошо:)"),
+        Err(e) => println!("Ошибка: {e}"),
+    }
 }
