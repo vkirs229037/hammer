@@ -1,2 +1,2 @@
-mod compiler;
-mod errors;
+pub mod compiler;
+pub mod errors;
