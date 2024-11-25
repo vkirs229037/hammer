@@ -11,9 +11,9 @@ pub enum CompileError {
 impl fmt::Display for CompileError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::FileError(filename, error) => write!(f, "[{filename}] ошибка: {error}"),
-            Self::ExpectedOp(loc) => write!(f, "[{loc}] ошибка: ожидался знак операции"),
-            Self::ConstTableOverflow => write!(f, "ошибка: переполнение таблицы констант"),
+            Self::FileError(filename, error) => write!(f, "[{filename}] {error}"),
+            Self::ExpectedOp(loc) => write!(f, "[{loc}] ожидался знак операции"),
+            Self::ConstTableOverflow => write!(f, "переполнение таблицы констант"),
         }
     }
 }
