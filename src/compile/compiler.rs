@@ -80,4 +80,8 @@ impl<'c> Compiler<'c> {
     fn write_out(&mut self, bytes: &[u8]) -> Result<(), CompileError> {
         self.out_file.write(bytes).map(|_| ()).map_err(|e| CompileError::FileError(self.file_name.clone(), e))
     }
+
+    pub fn consts(&self) -> &Vec<f64> {
+        &self.const_table
+    }
 }
