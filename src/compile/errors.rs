@@ -4,14 +4,16 @@ use std::io;
 
 pub enum CompileError {
     FileError(String, io::Error),
-    ExpectedOp(Loc)
+    ExpectedOp(Loc),
+    ConstTableOverflow,
 }
 
 impl fmt::Display for CompileError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::FileError(filename, error) => write!(f, "[{filename}] ошибка: {error}"),
-            Self::ExpectedOp(loc) => write!(f, "[{loc}] ошибка: ожидался знак операции")
+            Self::ExpectedOp(loc) => write!(f, "[{loc}] ошибка: ожидался знак операции"),
+            Self::ConstTableOverflow => write!(f, "ошибка: переполнение таблицы констант"),
         }
     }
 }
