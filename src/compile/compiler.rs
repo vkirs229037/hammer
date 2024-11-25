@@ -1,7 +1,7 @@
 use crate::parser::ast::AstNode;
 use crate::parser::tokens::TokenType;
 use crate::vm::vm::Value;
-use super::errors::*;
+use crate::compile::errors::*;
 use std::fs;
 use std::path;
 use std::io::{self, Write};
@@ -42,13 +42,39 @@ impl Compiler<'_> {
                 self.current_subtree = right;
                 self.compile_expr();
                 match op.ttype {
-                    TokenType::OpPlus => self.out_file.write(0x02),
+                    TokenType::OpPlus => self.write_out(&[0x02]),
+                    TokenType::OpMinus => self.write_out(&[0x03]),
+                    TokenType::OpStar => self.write_out(&[0x04]),
+                    TokenType::OpSlash => self.write_out(&[0x05]),
+                    _ => Err(CompileError::ExpectedOp(op.loc.clone()))
                 }
-            }
+            },
+            AstNode::Unary(op, expr) => {
+                self.current_subtree = expr;
+                self.compile_expr();
+                match op.ttype { 
+                    TokenType::OpMinus => self.write_out(&[0x06]),
+                    _ => Err(CompileError::ExpectedOp(op.loc.clone()))
+                }
+            },
+            AstNode::Grouping(expr) => {
+                self.current_subtree = expr;
+                self.compile_expr()
+            },
+            AstNode::Literal(val) => {
+                let index = self.const_table.len();
+                if index > u16::MAX as usize {
+                    return Err(CompileError::ConstTableOverflow)
+                }
+                self.const_table.push(*val);
+                self.write_out(&[0x01])?;
+                self.write_out(&u16::to_le_bytes(index as u16))
+            },
+            AstNode::None => panic!("неожиданное появление AstNode::None"),
         }
     }
 
-    fn compile_term(&mut self) -> Result<(), CompileError> {
-        self.compile_factor()
+    fn write_out(&mut self, bytes: &[u8]) -> Result<(), CompileError> {
+        self.out_file.write(bytes).map(|_| ()).map_err(|e| CompileError::FileError(self.file_name.clone(), e))
     }
 }
