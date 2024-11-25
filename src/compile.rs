@@ -1,1 +1,2 @@
 mod compiler;
+mod errors;

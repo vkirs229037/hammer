@@ -1,6 +1,7 @@
 use crate::parser::ast::AstNode;
 use crate::parser::tokens::TokenType;
 use crate::vm::vm::Value;
+use super::errors::*;
 use std::fs;
 use std::path;
 use std::io::{self, Write};
@@ -14,9 +15,9 @@ pub struct Compiler<'c> {
 }
 
 impl Compiler<'_> {
-    pub fn new(tree: &'static AstNode, out_file_path: String) -> io::Result<Self>  {
+    pub fn new(tree: &'static AstNode, out_file_path: String) -> Result<Self, CompileError>  {
         let path = path::Path::new(&out_file_path);
-        let file = fs::File::open(path)?;
+        let file = fs::File::open(path).map_err(|e| CompileError::FileError(out_file_path.clone(), e))?;
         let mut compiler = Self { 
             tree: &AstNode::None,
             current_subtree: &AstNode::None,
@@ -29,11 +30,11 @@ impl Compiler<'_> {
         Ok(compiler)
     }
 
-    pub fn compile(&mut self) {
+    pub fn compile(&mut self) -> Result<(), CompileError> {
         self.compile_expr()
     }
 
-    fn compile_expr(&mut self) -> io::Result<()> {
+    fn compile_expr(&mut self) -> Result<(), CompileError> {
         match self.current_subtree {
             AstNode::Binary(left, op, right) => {
                 self.current_subtree = left;
@@ -47,9 +48,7 @@ impl Compiler<'_> {
         }
     }
 
-    fn compile_term(&mut self) {
+    fn compile_term(&mut self) -> Result<(), CompileError> {
         self.compile_factor()
-
-        
     }
 }
