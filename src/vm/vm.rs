@@ -81,6 +81,11 @@ impl VM {
                 self.stack.push(b / a);
                 self.pc += 1;
             },
+            Instruction::NEG => {
+                let a = self.pop_stack()?;
+                self.stack.push(-a);
+                self.pc += 1;
+            }
             Instruction::EQ => {
                 exec_binop!(self, ==);
             },
