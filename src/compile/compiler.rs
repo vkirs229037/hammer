@@ -14,8 +14,8 @@ pub struct Compiler<'c> {
     const_table: Vec<Value>
 }
 
-impl Compiler<'_> {
-    pub fn new(tree: &'static AstNode, out_file_path: String) -> Result<Self, CompileError>  {
+impl<'c> Compiler<'c> {
+    pub fn new(tree: &'c AstNode, out_file_path: String) -> Result<Self, CompileError>  {
         let path = path::Path::new(&out_file_path);
         let file = fs::File::open(path).map_err(|e| CompileError::FileError(out_file_path.clone(), e))?;
         let mut compiler = Self { 
