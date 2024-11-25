@@ -59,7 +59,7 @@ fn main() {
         Err(e) => println!("Ошибка: {e}"),
     };
     let tree = ast_builder.tree();
-    let mut compiler = match Compiler::new(&tree, String::from("../../out/out")) {
+    let mut compiler = match Compiler::new(&tree, String::from("out/out")) {
         Ok(c) => c,
         Err(e) => { 
             println!("ошибка: {e}"); 
