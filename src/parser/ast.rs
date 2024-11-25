@@ -2,7 +2,7 @@ use crate::parser::tokens::*;
 use crate::parser::errors::*;
 
 #[derive(Clone, Debug)]
-pub enum Expr {
+pub enum AstNode {
     Literal(f64), 
     Grouping(Box<Self>),
     Binary(Box<Self>, Token, Box<Self>),
@@ -13,7 +13,7 @@ pub enum Expr {
 pub struct AstBuilder {
     tokens: Vec<Token>,
     cursor: usize,
-    pub tree: Expr
+    tree: AstNode
 }
 
 impl AstBuilder {
@@ -21,7 +21,7 @@ impl AstBuilder {
         Self {
             tokens,
             cursor: 0,
-            tree: Expr::None
+            tree: AstNode::None
         }
     }
 
@@ -30,61 +30,61 @@ impl AstBuilder {
         Ok(())
     }
 
-    fn expr(&mut self) -> Result<Expr, ParseError> {
+    fn expr(&mut self) -> Result<AstNode, ParseError> {
         self.term()
     }
 
-    fn term(&mut self) -> Result<Expr, ParseError> {
+    fn term(&mut self) -> Result<AstNode, ParseError> {
         let mut expr = self.factor()?;
         
         while self.match_ttype(&[TokenType::OpPlus, TokenType::OpMinus])? {
             let op = self.prev().clone();
             let right = self.factor()?;
             
-            expr = Expr::Binary(Box::new(expr), op.clone(), Box::new(right));
+            expr = AstNode::Binary(Box::new(expr), op.clone(), Box::new(right));
         }
 
         Ok(expr)
     }
 
-    fn factor(&mut self) -> Result<Expr, ParseError> {
+    fn factor(&mut self) -> Result<AstNode, ParseError> {
         let mut expr = self.unary()?;
 
         while self.match_ttype(&[TokenType::OpStar, TokenType::OpSlash])? {
             let op = self.prev().clone();
             let right = self.unary()?;
             
-            expr = Expr::Binary(Box::new(expr), op, Box::new(right));
+            expr = AstNode::Binary(Box::new(expr), op, Box::new(right));
         }
 
         Ok(expr)
     }
 
-    fn unary(&mut self) -> Result<Expr, ParseError> {
+    fn unary(&mut self) -> Result<AstNode, ParseError> {
         if self.match_ttype(&[TokenType::OpMinus])? {
             let op = self.prev().clone();
             let expr = self.primary()?;
             
-            return Ok(Expr::Unary(op, Box::new(expr)))
+            return Ok(AstNode::Unary(op, Box::new(expr)))
         }
         
         Ok(self.primary()?)
     }
 
-    fn primary(&mut self) -> Result<Expr, ParseError> {
+    fn primary(&mut self) -> Result<AstNode, ParseError> {
         let token = &self.consume()?.clone();
         
         match &token.ttype {
             TokenType::Eof => Err(ParseError::UnexpectedEof(token.loc.clone())),
             TokenType::NumLit(value) => { 
-                Ok(Expr::Literal(*value)) 
+                Ok(AstNode::Literal(*value)) 
             },
             TokenType::ParenLeft => {
                 let expr = self.expr()?;
                 if self.consume()?.ttype != TokenType::ParenRight {
                     return Err(ParseError::UnmatchingBrace(token.loc.clone()));
                 }
-                Ok(Expr::Grouping(Box::new(expr)))
+                Ok(AstNode::Grouping(Box::new(expr)))
             },
             TokenType::ParenRight => Err(ParseError::UnmatchingBrace(token.loc.clone())),
             TokenType::Ident(id) => todo!("Встречен идентификатор {id} при построении AST"),
@@ -130,5 +130,9 @@ impl AstBuilder {
     fn eof(&self) -> Result<bool, ParseError> {
         let ttype = &self.peek()?.ttype;
         Ok(*ttype == TokenType::Eof)
+    }
+
+    pub fn tree(&self) -> &AstNode {
+        &self.tree
     }
 }

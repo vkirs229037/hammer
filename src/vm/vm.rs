@@ -1,7 +1,7 @@
 use crate::vm::errors::*;
 use crate::vm::instruction::*;
 
-type Value = f64;
+pub type Value = f64;
 
 #[macro_use]
 mod vm_macros {
@@ -81,6 +81,11 @@ impl VM {
                 self.stack.push(b / a);
                 self.pc += 1;
             },
+            Instruction::NEG => {
+                let a = self.pop_stack()?;
+                self.stack.push(-a);
+                self.pc += 1;
+            }
             Instruction::EQ => {
                 exec_binop!(self, ==);
             },
