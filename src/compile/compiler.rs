@@ -34,7 +34,8 @@ impl<'c> Compiler<'c> {
     }
 
     pub fn compile(&mut self) -> Result<(), CompileError> {
-        self.compile_expr()
+        self.compile_expr()?;
+        self.write_out(&[0xff])
     }
 
     fn compile_expr(&mut self) -> Result<(), CompileError> {
