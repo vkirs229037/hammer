@@ -12,7 +12,7 @@ use std::fs;
 use std::io::Read;
 
 fn main() {
-    let program = String::from("(25 / 5 * 5 - (6 - 5)) + 5 + (25 * 5 - 5 * (5 - 3));");
+    let program = String::from("4 + 5.1 * 9 - 11.6;");
 
     let mut lexer = Lexer::new("module".to_owned(), program);
     match lexer.lex() {
@@ -49,17 +49,16 @@ fn main() {
         Err(e) => println!("Ошибка: {e}"),
     }
 
-    let mut vm = VM::new();
     let mut file = match fs::OpenOptions::new().read(true).open("out/out") {
         Ok(f) => f,
         Err(e) => panic!("{e}"),
     };
-    let mut program: Vec<u8> = vec![];
-    file.read_to_end(&mut program);
-    vm.load_program(program);
-    for c in compiler.consts() {
-        vm.add_const(*c);
-    }
+    let mut bytecode: Vec<u8> = vec![];
+    file.read_to_end(&mut bytecode);
+    let mut vm = match VM::new(bytecode) {
+        Ok(v) => v,
+        Err(e) => panic!("Ошибка: {e}"),
+    };
     match vm.run() {
         Ok(()) => println!("Все хорошо:)"),
         Err(e) => println!("Ошибка: {e}"),
