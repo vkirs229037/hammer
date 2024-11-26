@@ -25,26 +25,36 @@ pub struct VM {
 }
 
 impl VM {
-    pub fn new(bytecode: Vec<u8>) -> Self {
+    pub fn new(bytecode: Vec<u8>) -> Result<Self, BytecodeError> {
         let mut bytecode_iter = bytecode.into_iter();
         let program: Vec<u8> = bytecode_iter.by_ref().take_while(|c| *c != 0xff).chain([0xff]).collect();
         let const_table: Vec<u8> = bytecode_iter.skip(1).collect();
-        VM {
+        let mut vm = VM {
             stack: vec![],
             program: vec![],
             consts: vec![],
             pc: 0,
             running: false,
+        };
+        vm.parse_const_table(const_table)?;
+        Ok(vm)
+    }
+
+    fn parse_const_table(&mut self, const_table: Vec<u8>) -> Result<(), BytecodeError> {
+        let len = const_table.len();
+        let i = 0;
+        while (i < len) {
+            let val_type = const_table.get(i).ok_or_else(|| BytecodeError::UnexpectedEof)?;
+            let size = *const_table.get(i + 1).ok_or_else(|| BytecodeError::UnexpectedEof)?;
+            let value_bytes = const_table.get((i + 2)..(i + size as usize)).ok_or_else(|| BytecodeError::UnexpectedEof)?;
+            let value = f64::from_le_bytes(
+                value_bytes.try_into().map_err(|_| BytecodeError::IncorrectRep)?
+            );
+            self.consts.push(value);
         }
+        Ok(())
     }
 
-    pub fn add_const(&mut self, value: Value) {
-        self.consts.push(value);
-    }
-
-    fn parse_const_table(&self, const_table: Vec<u8>) -> Vec<Value> {
-        vec![]
-    }
 
     pub fn load_program(&mut self, program: Vec<u8>) {
         self.program = program;

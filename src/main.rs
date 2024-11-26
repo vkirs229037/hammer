@@ -55,7 +55,10 @@ fn main() {
     };
     let mut bytecode: Vec<u8> = vec![];
     file.read_to_end(&mut bytecode);
-    let mut vm = VM::new(bytecode);
+    let mut vm = match VM::new(bytecode) {
+        Ok(v) => v,
+        Err(e) => panic!("Ошибка: {e}"),
+    };
     match vm.run() {
         Ok(()) => println!("Все хорошо:)"),
         Err(e) => println!("Ошибка: {e}"),
