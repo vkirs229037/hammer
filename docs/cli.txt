@@ -1,0 +1,3 @@
+hammer compile <in_file> <out_file> - компиляция
+hammer run [-b] <file> - запуск файла. -b - опция для запуска файла с байткодом
+hammer inspect <file> - анализ файла с байткодом 
