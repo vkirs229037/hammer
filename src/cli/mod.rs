@@ -8,7 +8,8 @@ use crate::{compile::{compiler::Compiler, errors::CompileError}, error::HammerEr
 enum Command {
     Compile,
     Run(RunType),
-    Inspect
+    Inspect,
+    Help
 }
 
 enum RunType {
@@ -30,6 +31,7 @@ impl Cli {
         println!("  run <in>                скомпилировать и запустить файл");
         println!("    run -b <in>           запустить файл с байткодом");
         println!("  inspect <in>            исследовать файл с байткодом (команды в байткоде + список констант)");
+        println!("  help                    показать эту справку")
     }
     
     pub fn new(args: &mut Args) -> Result<Self, CliError> {
@@ -65,6 +67,10 @@ impl Cli {
                 "inspect" => {
                     com_type = Command::Inspect;
                     out_file = None;
+                },
+                "help" => {
+                    com_type = Command::Help;
+                    out_file = None;
                 }
                 _ => return Err(CliError::UnknownCommand(command))
             }
@@ -99,6 +105,10 @@ impl Cli {
             },
             Command::Inspect => {
                 todo!("Исследование файла байткода");
+            },
+            Command::Help => {
+                Self::usage();
+                Ok(())
             }
         }
     }
