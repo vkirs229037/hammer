@@ -12,7 +12,7 @@ use std::fs;
 use std::io::Read;
 
 fn main() {
-    let program = String::from("(25 / 5 * 5 - (6 - 5)) + 5 + (25 * 5 - 5 * (5 - 3));");
+    let program = String::from("4 + 5;");
 
     let mut lexer = Lexer::new("module".to_owned(), program);
     match lexer.lex() {
