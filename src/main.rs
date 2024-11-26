@@ -12,6 +12,11 @@ use std::fs;
 use std::io::Read;
 
 fn main() {
+    println!("а");
+    // run_hammer();
+}
+
+fn run_hammer() {
     let program = String::from("4 + 5.1 * 9 - 11.6;");
 
     let mut lexer = Lexer::new("module".to_owned(), program);
