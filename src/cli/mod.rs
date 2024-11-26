@@ -19,7 +19,7 @@ enum RunType {
 
 pub struct Cli {
     command: Command,
-    in_file: String,
+    in_file: Option<String>,
     out_file: Option<String>,
 }
 
@@ -38,31 +38,41 @@ impl Cli {
         let cli;
         let _program = args.next().expect("Невозможная ситуация: нет первого аргумента командной строки");
         let command = args.next().ok_or_else(|| CliError::NoCommand)?;
-        let next_arg = args.next().ok_or_else(|| CliError::NoInputFile)?;
+        let next_arg = args.next();
         let re = Regex::new(r"\..*$").expect("\\..*$ является верным регулярным выражением");
-        if (next_arg == "-b") {
+        if next_arg.as_ref().is_some_and(|arg| arg == "-b") {
             if (command != "run") {
-                return Err(CliError::IncorrectParam(command, next_arg));
+                return Err(CliError::IncorrectParam(command, next_arg.unwrap()));
             }
             let in_file = args.next().ok_or_else(|| CliError::NoInputFile)?;
             cli = Self { 
                 command: Command::Run(RunType::Bytecode), 
-                in_file: in_file.clone(),
-                out_file: Some(String::from(re.replace(in_file.as_str(), ""))),
+                in_file: Some(in_file.clone()),
+                out_file: None,
             }
         }
         else {
-            let in_file = next_arg;
+            let in_file = match next_arg {
+                Some(f) => Some(f),
+                None => {
+                    if command == "help" {
+                        None
+                    }
+                    else {
+                        return Err(CliError::NoInputFile);
+                    }
+                }
+            };
             let com_type;
             let out_file;
             match command.as_str() {
                 "run" => {
                     com_type = Command::Run(RunType::Source);
-                    out_file = Some(String::from(re.replace(in_file.as_str(), "")));
+                    out_file = Some(args.next().unwrap_or(String::from(re.replace(in_file.clone().unwrap().as_str(), ""))));
                 },
                 "compile" => {
                     com_type = Command::Compile;
-                    out_file = Some(args.next().unwrap_or(String::from(re.replace(in_file.as_str(), ""))));
+                    out_file = Some(args.next().unwrap_or(String::from(re.replace(in_file.clone().unwrap().as_str(), ""))));
                 },
                 "inspect" => {
                     com_type = Command::Inspect;
@@ -84,22 +94,26 @@ impl Cli {
     }
 
     pub fn run(&self) -> Result<(), HammerError> {
-        let mut input_file = match fs::OpenOptions::new().read(true).open(self.in_file.clone()) {
-            Ok(f) => f,
-            Err(e) => return Err(HammerError::Compile(CompileError::FileError(self.in_file.clone(), e))),
-        };
         match &self.command {
             Command::Compile => {
+                let mut input_file = match fs::OpenOptions::new().read(true).open(self.in_file.clone().unwrap()) {
+                    Ok(f) => f,
+                    Err(e) => return Err(HammerError::Compile(CompileError::FileError(self.in_file.clone().unwrap(), e))),
+                };
                 self.compile(&mut input_file)
             },
             Command::Run(rt) => {
+                let mut input_file = match fs::OpenOptions::new().read(true).open(self.in_file.clone().unwrap()) {
+                    Ok(f) => f,
+                    Err(e) => return Err(HammerError::Compile(CompileError::FileError(self.in_file.clone().unwrap(), e))),
+                };
                 match rt {
                     RunType::Bytecode => {
-                        self.interp()
+                        self.interp(true)
                     },
                     RunType::Source => {
                         self.compile(&mut input_file)?;
-                        self.interp()
+                        self.interp(false)
                     }
                 }
             },
@@ -155,8 +169,14 @@ impl Cli {
         Ok(())
     }
 
-    fn interp(&self) -> Result<(), HammerError> {
-        let path = self.out_file.clone().expect("При запуске значение out_file всегда задано");
+    fn interp(&self, b: bool) -> Result<(), HammerError> {
+        let path;
+        if b {
+            path = self.in_file.clone().expect("При запуске с -b значение in_file всегда задано");
+        }
+        else {
+            path = self.out_file.clone().expect("При запуске значение out_file всегда задано");
+        }
         let mut file = match fs::OpenOptions::new().read(true).open(path.clone()) {
             Ok(f) => f,
             Err(e) => return Err(HammerError::Compile(CompileError::FileError(path, e))),
