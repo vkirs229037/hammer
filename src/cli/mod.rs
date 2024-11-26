@@ -23,6 +23,15 @@ pub struct Cli {
 }
 
 impl Cli {
+    pub fn usage() {
+        println!("hammer <КОМАНДА> [ПАРАМЕТРЫ] ВХОДНОЙ_ФАЙЛ [ВЫХОДНОЙ_ФАЙЛ]");
+        println!("Команды");
+        println!("  compile <in> [out]      скомпилировать файл <in> (в файл [out], если задан)");
+        println!("  run <in>                скомпилировать и запустить файл");
+        println!("    run -b <in>           запустить файл с байткодом");
+        println!("  inspect <in>            исследовать файл с байткодом (команды в байткоде + список констант)");
+    }
+    
     pub fn new(args: &mut Args) -> Result<Self, CliError> {
         let cli;
         let _program = args.next().expect("Невозможная ситуация: нет первого аргумента командной строки");
