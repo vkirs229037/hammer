@@ -1,4 +1,4 @@
-mod errors;
+pub mod errors;
 use errors::*;
 use std::env::Args;
 use regex::Regex;
@@ -64,5 +64,9 @@ impl Cli {
             }
         }
         Ok(cli)
+    }
+
+    fn run(&self) {
+
     }
 }
