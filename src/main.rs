@@ -2,6 +2,7 @@ mod vm;
 mod parser;
 mod utils;
 mod compile;
+mod cli;
 
 use parser::lexer::Lexer;
 use parser::ast::{AstBuilder, AstNode};
@@ -10,13 +11,13 @@ use vm::vm::VM;
 
 use std::fs;
 use std::io::Read;
+use std::env;
 
 fn main() {
-    println!("а");
-    // run_hammer();
+    println!("a");
 }
 
-fn run_hammer() {
+fn run_hammer_example() {
     let program = String::from("4 + 5.1 * 9 - 11.6;");
 
     let mut lexer = Lexer::new("module".to_owned(), program);
