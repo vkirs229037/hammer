@@ -21,13 +21,15 @@ impl fmt::Display for InterpretationError {
 }
 
 pub enum BytecodeError {
-    UnexpectedEof
+    UnexpectedEof,
+    IncorrectRep,
 }
 
 impl fmt::Display for BytecodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             BytecodeError::UnexpectedEof => write!(f, "неожиданный конец файла при чтении константы"),
+            BytecodeError::IncorrectRep => write!(f, "данные были неверно представлены в двоичном виде"),
         }
     }
 }
