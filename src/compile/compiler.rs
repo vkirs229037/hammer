@@ -37,7 +37,7 @@ impl<'c> Compiler<'c> {
         self.write_out(&[0xff], &mut file)?;
         for c in &self.const_table {
             // TODO: Типы
-            self.write_out(&[0x08, 0x00], &mut file)?;
+            self.write_out(&[0x00, 0x08], &mut file)?;
             let bytes = f64::to_le_bytes(*c);
             self.write_out(&bytes, &mut file)?;
         }
