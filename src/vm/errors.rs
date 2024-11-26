@@ -19,3 +19,15 @@ impl fmt::Display for InterpretationError {
         }
     }
 }
+
+pub enum BytecodeError {
+    UnexpectedEof
+}
+
+impl fmt::Display for BytecodeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            BytecodeError::UnexpectedEof => write!(f, "неожиданный конец файла при чтении константы"),
+        }
+    }
+}
