@@ -30,6 +30,7 @@ impl<'c> Compiler<'c> {
         let path = path::Path::new(&self.file_name);
         let mut file = fs::OpenOptions::new().write(true)
                                              .create(true)
+                                             .truncate(true)
                                              .open(path)
                                              .map_err(|e| CompileError::FileError(self.file_name.clone(), e))?;
         self.compile_expr(&mut file)?;
