@@ -28,10 +28,10 @@ impl VM {
     pub fn new(bytecode: Vec<u8>) -> Result<Self, BytecodeError> {
         let mut bytecode_iter = bytecode.into_iter();
         let program: Vec<u8> = bytecode_iter.by_ref().take_while(|c| *c != 0xff).chain([0xff]).collect();
-        let const_table: Vec<u8> = bytecode_iter.skip(1).collect();
+        let const_table: Vec<u8> = bytecode_iter.collect();
         let mut vm = VM {
             stack: vec![],
-            program: vec![],
+            program,
             consts: vec![],
             pc: 0,
             running: false,
@@ -42,15 +42,16 @@ impl VM {
 
     fn parse_const_table(&mut self, const_table: Vec<u8>) -> Result<(), BytecodeError> {
         let len = const_table.len();
-        let i = 0;
+        let mut i = 0;
         while (i < len) {
             let val_type = const_table.get(i).ok_or_else(|| BytecodeError::UnexpectedEof)?;
             let size = *const_table.get(i + 1).ok_or_else(|| BytecodeError::UnexpectedEof)?;
-            let value_bytes = const_table.get((i + 2)..(i + size as usize)).ok_or_else(|| BytecodeError::UnexpectedEof)?;
+            let value_bytes = const_table.get((i + 2)..(i + 2 + size as usize)).ok_or_else(|| BytecodeError::UnexpectedEof)?;
             let value = f64::from_le_bytes(
                 value_bytes.try_into().map_err(|_| BytecodeError::IncorrectRep)?
             );
             self.consts.push(value);
+            i += 2 + size as usize;
         }
         Ok(())
     }
