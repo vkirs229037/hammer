@@ -25,7 +25,10 @@ pub struct VM {
 }
 
 impl VM {
-    pub fn new() -> Self {
+    pub fn new(bytecode: Vec<u8>) -> Self {
+        let mut bytecode_iter = bytecode.into_iter();
+        let program: Vec<u8> = bytecode_iter.by_ref().take_while(|c| *c != 0xff).chain([0xff]).collect();
+        let const_table: Vec<u8> = bytecode_iter.skip(1).collect();
         VM {
             stack: vec![],
             program: vec![],
@@ -37,6 +40,10 @@ impl VM {
 
     pub fn add_const(&mut self, value: Value) {
         self.consts.push(value);
+    }
+
+    fn parse_const_table(&self, const_table: Vec<u8>) -> Vec<Value> {
+        vec![]
     }
 
     pub fn load_program(&mut self, program: Vec<u8>) {
