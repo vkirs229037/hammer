@@ -29,6 +29,9 @@ fn main() -> ExitCode {
     };
     match cli.run() {
         Ok(()) => ExitCode::SUCCESS,
-        Err(e) => ExitCode::FAILURE,
+        Err(e) => { 
+            println!("{e}");
+            ExitCode::FAILURE
+        }
     }
 }
