@@ -1,12 +1,13 @@
 use crate::parser::tokens::*;
 use crate::parser::errors::*;
 
-
+#[derive(Clone, Debug)]
 pub enum Stmt {
     Block(Vec<Box<Self>>),
     Expr(Box<Expr>),
 }
 
+#[derive(Clone, Debug)]
 pub enum Expr {
     Func(Token, Box<Self>),
     Literal(Token), 
