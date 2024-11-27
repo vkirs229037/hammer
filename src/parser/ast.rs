@@ -1,6 +1,21 @@
 use crate::parser::tokens::*;
 use crate::parser::errors::*;
 
+
+pub enum Stmt {
+    Block(Vec<Box<Self>>),
+    Expr(Box<Expr>),
+}
+
+pub enum Expr {
+    Func(Token, Box<Self>),
+    Literal(Token), 
+    Grouping(Box<Self>),
+    Binary(Box<Self>, Token, Box<Self>),
+    Unary(Token, Box<Self>),
+    None,
+}
+
 #[derive(Clone, Debug)]
 pub enum AstNode {
     Literal(f64), 
