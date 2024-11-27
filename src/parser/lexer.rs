@@ -65,7 +65,15 @@ impl Lexer {
 
     fn parse_ident(&mut self, buf: String) -> Result<Token, LexError> {
         match buf.as_str() {
-            _ => todo!("Идентификаторы пока что не поддерживаются")
+            "abs" => Ok(Token::new(
+                TokenType::Builtin(BIn::Abs),
+                Loc::new(self.file.clone(), self.line, self.col)
+            )),
+            "println" => Ok(Token::new(
+                TokenType::Builtin(BIn::Println),
+                Loc::new(self.file.clone(), self.line, self.col)
+            )),
+            _ => Err(LexError::UnknownLexem(Loc::new(self.file.clone(), self.line, self.col)))
         }
     }
 
