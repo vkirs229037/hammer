@@ -3,6 +3,7 @@ use std::fmt;
 #[derive(PartialEq, Clone, Debug)]
 pub enum TokenType {
     Ident(String),
+    Builtin(BIn),
     NumLit(f64),
     OpPlus,
     OpMinus,
@@ -12,6 +13,12 @@ pub enum TokenType {
     ParenRight,
     Semicolon,
     Eof,
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum BIn {
+    Println,
+    Abs,
 }
 
 use TokenType::*;
@@ -63,6 +70,7 @@ impl fmt::Display for Token {
         match ttype {
             Ident(id) => write!(f, "[{loc}] {id}"),
             NumLit(lit) => write!(f, "[{loc}] {lit}"),
+            Builtin(b) => write!(f, "[{loc}] {b}"),
             OpPlus => write!(f, "[{loc}] +"),
             OpMinus => write!(f, "[{loc}] -"),
             OpStar => write!(f, "[{loc}] *"),
@@ -71,6 +79,15 @@ impl fmt::Display for Token {
             ParenRight => write!(f, "[{loc}] )"),
             Semicolon => write!(f, "[{loc}] ;"),
             Eof => write!(f, "[{loc}]"),
+        }
+    }
+}
+
+impl fmt::Display for BIn {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Abs => write!(f, "builtin abs"),
+            Self::Println => write!(f, "builtin println"),
         }
     }
 }
