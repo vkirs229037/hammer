@@ -1,5 +1,6 @@
 <program> -> <stmt> ";" <program> | <stmt>
-<stmt> -> <expr>
+<stmt> -> <expr> | <block>
+<block> -> "{" <program> "}"
 <expr> -> <term> | <func>
 <func> -> IDENT "(" <expr> ")"
 <term> -> <factor> TERM_OP <term> | <factor>
