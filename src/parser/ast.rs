@@ -1,6 +1,9 @@
 use crate::parser::tokens::*;
 use crate::parser::errors::*;
 
+// TODO Возможно лучше, если данные в enum представляются 
+// структурой 
+
 #[derive(Clone, Debug)]
 pub enum Stmt {
     Block(Vec<Box<Self>>),
