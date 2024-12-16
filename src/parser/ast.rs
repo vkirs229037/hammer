@@ -20,6 +20,8 @@ pub enum Expr {
     None,
 }
 
+
+// TODO Заменить это на Expr/Stmt 
 #[derive(Clone, Debug)]
 pub enum AstNode {
     Literal(f64), 
