@@ -17,17 +17,6 @@ pub enum Expr {
     None,
 }
 
-
-// TODO Заменить это на Expr/Stmt 
-#[derive(Clone, Debug)]
-pub enum AstNode {
-    Literal(f64), 
-    Grouping(Box<Self>),
-    Binary(Box<Self>, Token, Box<Self>),
-    Unary(Token, Box<Self>),
-    None,
-}
-
 pub struct AstBuilder {
     tokens: Vec<Token>,
     cursor: usize,
