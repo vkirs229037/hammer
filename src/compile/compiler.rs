@@ -1,4 +1,4 @@
-use crate::parser::ast::AstNode;
+use crate::parser::ast::{Stmt, Expr};
 use crate::parser::tokens::TokenType;
 use crate::vm::vm::Value;
 use crate::compile::errors::*;
@@ -6,18 +6,18 @@ use std::fs;
 use std::path;
 use std::io::{self, Write};
 
-pub struct Compiler<'c> {
-    tree: &'c AstNode,
-    current_subtree: &'c AstNode,
+pub struct Compiler {
+    tree: Vec<Stmt>,
+    current_subtree: Vec<Stmt>,
     file_name: String,
     const_table: Vec<Value>
 }
 
-impl<'c> Compiler<'c> {
-    pub fn new(tree: &'c AstNode, out_file_path: String) -> Result<Self, CompileError>  {
+impl Compiler {
+    pub fn new(tree: Vec<Stmt>, out_file_path: String) -> Result<Self, CompileError>  {
         let mut compiler = Self { 
-            tree: &AstNode::None,
-            current_subtree: &AstNode::None,
+            tree: vec![],
+            current_subtree: vec![],
             file_name: out_file_path,
             const_table: vec![]
         };
