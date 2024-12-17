@@ -20,7 +20,7 @@ pub enum Expr {
 pub struct AstBuilder {
     tokens: Vec<Token>,
     cursor: usize,
-    tree: Vec<Stmt>
+    pub tree: Vec<Stmt>
 }
 
 impl AstBuilder {
@@ -137,9 +137,5 @@ impl AstBuilder {
     fn eof(&self) -> Result<bool, ParseError> {
         let ttype = &self.peek()?.ttype;
         Ok(*ttype == TokenType::Eof)
-    }
-
-    pub fn tree(&self) -> &Vec<Stmt> {
-        &self.tree
     }
 }

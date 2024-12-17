@@ -148,7 +148,7 @@ impl Cli {
             }
         };
 
-        let tree = ast_builder.tree();
+        let tree = ast_builder.tree;
         let mut compiler = match Compiler::new(self.out_file.clone().expect("При компиляции значение out_file всегда задано")) {
             Ok(c) => c,
             Err(e) => {
