@@ -30,12 +30,17 @@ impl Compiler {
                                              .open(path)
                                              .map_err(|e| CompileError::FileError(self.file_name.clone(), e))?;
         for stmt in tree {
+            dbg!("hit stmt");
             match stmt {
                 Stmt::Expr(e) => self.current_subtree = Some(e),
                 Stmt::Block(_) => todo!("Блоки выражений"),
             };
             self.compile_expr(&mut file)?;
         }
+        // TODO: Это нужно будет убрать
+        // Также это НЕ будет работать если в программе
+        // только одно выражение
+        self.write_out(&[0xfe], &mut file)?;
         self.write_out(&[0xfe], &mut file)?;
         self.write_out(&[0xff], &mut file)?;
         for c in &self.const_table {
