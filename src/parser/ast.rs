@@ -33,7 +33,19 @@ impl AstBuilder {
     }
 
     pub fn parse(&mut self) -> Result<(), ParseError> {
-        self.tree = vec![Stmt::Expr(Box::new(self.expr()?))];
+        loop { 
+            let stmt;
+            match &self.tokens[self.cursor].ttype {
+                TokenType::Eof => break,
+                _ => {
+                    stmt = Stmt::Expr(Box::new(self.expr()?));
+                    self.tree.push(stmt);
+                    if !self.match_ttype(&[TokenType::Semicolon])? {
+                        return Err(ParseError::ExpectedSemi(self.prev().loc.clone()))
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
