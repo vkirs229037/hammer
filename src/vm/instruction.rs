@@ -18,6 +18,7 @@ pub enum Instruction {
     JMP,
     JF,
     JBACK,
+    BIN,
     DBG,
     HLT,
 }
@@ -44,6 +45,7 @@ impl TryFrom<u8> for Instruction {
             0x0e => Ok(Instruction::JMP),
             0x0f => Ok(Instruction::JF),
             0x10 => Ok(Instruction::JBACK),
+            0x11 => Ok(Instruction::BIN),
             0xfe => Ok(Instruction::DBG),
             0xff => Ok(Instruction::HLT),
             _ => Err(InterpretationError::OpcodeError),
