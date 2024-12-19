@@ -74,8 +74,6 @@ impl VM {
     fn run_one_instr(&mut self) -> Result<(), InterpretationError> {
         let inst: Instruction = self.get_byte(0)?
                                     .try_into()?;
-        dbg!(&inst);
-        dbg!(&self.stack);
         match inst {
             Instruction::NOP => { },
             Instruction::PUSH => {
