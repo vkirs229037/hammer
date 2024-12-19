@@ -21,6 +21,8 @@ pub enum ParseError {
     UnexpectedToken(Loc),
     ExpectedSemi(Loc),
     ExpectedParen(Loc),
+    ExpectedIdent(Loc),
+    ExpectedAssign(Loc),
 }
 
 impl fmt::Display for ParseError {
@@ -31,6 +33,8 @@ impl fmt::Display for ParseError {
             Self::UnexpectedToken(loc) => write!(f, "[{loc}] неожиданный токен"),
             Self::ExpectedSemi(loc) => write!(f, "[{loc}] ожидалась точка с запятой"),
             Self::ExpectedParen(loc) => write!(f, "[{loc}] ожидалась скобка"),
+            Self::ExpectedIdent(loc) => write!(f, "[{loc}] ожидался идентификатор"),
+            Self::ExpectedAssign(loc) => write!(f, "[{loc}] ожидался знак присвоения ="),
         }
     }
 }

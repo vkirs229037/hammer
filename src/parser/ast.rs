@@ -7,6 +7,7 @@ use crate::parser::errors::*;
 pub enum Stmt {
     Block(Vec<Box<Self>>),
     Expr(Box<Expr>),
+    Decl(Variable, Box<Expr>)
 }
 
 #[derive(Clone, Debug)]
@@ -24,6 +25,8 @@ pub enum Expr {
 // инициализируемые переменные
 // Конечно, в жизни никогда так не бывает,
 // поэтому в будущем нужно будет это учесть
+// TODO
+#[derive(Clone, Debug)]
 pub struct Variable {
     name: String,
     initialized: bool
@@ -51,16 +54,39 @@ impl AstBuilder {
             let stmt;
             match self.peek()?.ttype {
                 TokenType::Eof => break,
+                TokenType::Keyword(Kw::Let) => {
+                    self.consume()?;
+                    stmt = self.decl()?;
+                    self.tree.push(stmt);
+                }
                 _ => {
                     stmt = Stmt::Expr(Box::new(self.expr()?));
                     self.tree.push(stmt);
-                    if !self.match_ttype(&[TokenType::Semicolon])? {
-                        return Err(ParseError::ExpectedSemi(self.prev().loc.clone()))
-                    }
                 }
+            }
+            if !self.match_ttype(&[TokenType::Semicolon])? {
+                return Err(ParseError::ExpectedSemi(self.prev().loc.clone()))
             }
         }
         Ok(())
+    }
+
+    fn decl(&mut self) -> Result<Stmt, ParseError> {
+        let name;
+        // См. определение структуры Variable
+        let initialized = true;
+        let token = &self.consume()?.clone();
+        match &token.ttype {
+            TokenType::Ident(id) => name = id,
+            _ => return Err(ParseError::ExpectedIdent(self.prev().loc.clone()))
+        }
+        if !self.match_ttype(&[TokenType::Assign])? {
+            return Err(ParseError::ExpectedAssign(self.prev().loc.clone()))
+        }
+        let expr = self.expr()?;
+        let var = Variable { name: name.to_string(), initialized };
+        self.variables.push(var.clone());
+        Ok(Stmt::Decl(var, Box::new(expr)))
     }
 
     fn expr(&mut self) -> Result<Expr, ParseError> {
@@ -133,7 +159,7 @@ impl AstBuilder {
                 Ok(Expr::Grouping(Box::new(expr)))
             },
             TokenType::ParenRight => Err(ParseError::UnmatchingBrace(token.loc.clone())),
-            TokenType::Ident(id) => todo!("Поддержка переменных"),
+            TokenType::Ident(id) => Ok(Expr::Variable(token.clone())),
             _ => Err(ParseError::UnexpectedToken(token.loc.clone()))
         }
     }
