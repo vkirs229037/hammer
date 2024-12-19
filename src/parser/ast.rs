@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::parser::tokens::*;
 use crate::parser::errors::*;
 
@@ -14,13 +16,24 @@ pub enum Expr {
     Grouping(Box<Self>),
     Binary(Box<Self>, Token, Box<Self>),
     Unary(Token, Box<Self>),
+    Variable(Token),
     None,
+}
+
+// Пока что поддерживаются только сразу
+// инициализируемые переменные
+// Конечно, в жизни никогда так не бывает,
+// поэтому в будущем нужно будет это учесть
+pub struct Variable {
+    name: String,
+    initialized: bool
 }
 
 pub struct AstBuilder {
     tokens: Vec<Token>,
     cursor: usize,
-    pub tree: Vec<Stmt>
+    pub tree: Vec<Stmt>,
+    pub variables: Vec<Variable>
 }
 
 impl AstBuilder {
@@ -28,7 +41,8 @@ impl AstBuilder {
         Self {
             tokens,
             cursor: 0,
-            tree: vec![]
+            tree: vec![],
+            variables: vec![]
         }
     }
 
@@ -119,7 +133,7 @@ impl AstBuilder {
                 Ok(Expr::Grouping(Box::new(expr)))
             },
             TokenType::ParenRight => Err(ParseError::UnmatchingBrace(token.loc.clone())),
-            TokenType::Ident(id) => todo!("Встречен идентификатор {id} при построении AST"),
+            TokenType::Ident(id) => todo!("Поддержка переменных"),
             _ => Err(ParseError::UnexpectedToken(token.loc.clone()))
         }
     }
