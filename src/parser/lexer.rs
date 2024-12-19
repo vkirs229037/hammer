@@ -45,6 +45,7 @@ impl Lexer {
                     self.parse_numlit(buf)?;
                     self.col += len;
                 },
+                '=' => { self.push_token(TokenType::Assign); self.col += 1; }
                 '+' => { self.push_token(TokenType::OpPlus); self.col += 1; }
                 '-' => { self.push_token(TokenType::OpMinus); self.col += 1; }
                 '*' => { self.push_token(TokenType::OpStar); self.col += 1; }
