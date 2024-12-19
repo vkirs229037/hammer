@@ -117,7 +117,7 @@ impl AstBuilder {
 
     fn reassign(&mut self) -> Result<Stmt, ParseError> {
         let token = &self.consume()?.clone();
-        let Token { ttype: TokenType::Ident(varname), loc: _ } = token else {
+        let Token { ttype: TokenType::Ident(varname), loc } = token else {
             panic!("Неожиданная ситуация: должен был быть Ident")
         };
         if !self.match_ttype(&[TokenType::Assign])? {
@@ -126,7 +126,7 @@ impl AstBuilder {
         let var;
         let found_var = self.variables.iter().find(|var| var.name == *varname);
         match found_var {
-            None => return Err(ParseError::UnknownVariable(self.prev().loc.clone())),
+            None => return Err(ParseError::UnknownVariable(loc.clone())),
             Some(v) => var = v.clone(),
         }
         let expr = self.expr()?;
