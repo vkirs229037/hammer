@@ -1,9 +1,9 @@
 pub mod errors;
 use errors::*;
-use std::{env::Args, io::Read};
+use std::{env::Args, io::Read, rc::Rc};
 use regex::Regex;
 use std::fs;
-use crate::{compile::{compiler::Compiler, errors::CompileError}, error::HammerError, parser::{ast::AstBuilder, lexer::Lexer}, vm::vm::VM};
+use crate::{compile::{compiler::Compiler, errors::CompileError}, error::HammerError, parser::{ast::{Ast, AstBuilder}, lexer::Lexer}, vm::vm::VM};
 
 enum Command {
     Compile,
@@ -148,7 +148,7 @@ impl Cli {
             }
         };
 
-        let ast = ast_builder.ast();
+        let Ast { tree, variables } = ast_builder.ast();
         let mut compiler = match Compiler::new(self.out_file.clone().expect("При компиляции значение out_file всегда задано")) {
             Ok(c) => c,
             Err(e) => {
@@ -156,7 +156,7 @@ impl Cli {
                 return Err(HammerError::Compile(e));
             }
         };
-        match compiler.compile(ast) {
+        match compiler.compile(tree, variables) {
             Ok(()) => {
                 let file = self.out_file.clone().expect("При компиляции значение out_file всегда задано");
                 println!("Компиляция прошла успешно: {file}");

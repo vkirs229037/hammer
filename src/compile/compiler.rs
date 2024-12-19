@@ -1,16 +1,16 @@
-use crate::parser::ast::{Ast, Expr, Stmt, Variable};
+use crate::parser::ast::{Expr, Stmt, Variable};
 use crate::parser::tokens::{TokenType, Token, BIn};
 use crate::vm::vm::Value;
 use crate::compile::errors::*;
 use std::fs;
 use std::path;
 use std::io::{self, Write};
+use std::rc::Rc;
 
 pub struct Compiler {
     current_subtree: Option<Box<Expr>>,
     file_name: String,
-    const_table: Vec<Value>,
-    variables: Vec<Variable>
+    const_table: Vec<Value>
 }
 
 impl Compiler {
@@ -23,7 +23,7 @@ impl Compiler {
         Ok(compiler)
     }
 
-    pub fn compile(&mut self, ast: Ast) -> Result<(), CompileError> {
+    pub fn compile(&mut self, tree: Vec<Stmt>, variables: Vec<Variable>) -> Result<(), CompileError> {
         let path = path::Path::new(&self.file_name);
         let mut file = fs::OpenOptions::new().write(true)
                                              .create(true)
@@ -34,7 +34,7 @@ impl Compiler {
             match stmt {
                 Stmt::Expr(e) => {
                     self.current_subtree = Some(e);
-                    self.compile_expr(&mut file)?;
+                    self.compile_expr(&mut file, &variables)?;
                 },
                 Stmt::Block(_) => todo!("Блоки выражений"),
                 Stmt::Decl(var, expr) => {
@@ -52,7 +52,7 @@ impl Compiler {
         Ok(())
     }
 
-    fn compile_expr(&mut self, file: &mut fs::File) -> Result<(), CompileError> {
+    fn compile_expr(&mut self, file: &mut fs::File, variables: &Vec<Variable>) -> Result<(), CompileError> {
         // В идеале здесь не должно быть клонирования, однако я просто
         // уже не знаю как по другому сделать((
         match *self.current_subtree.clone().unwrap() {
