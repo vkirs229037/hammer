@@ -30,7 +30,6 @@ impl Compiler {
                                              .open(path)
                                              .map_err(|e| CompileError::FileError(self.file_name.clone(), e))?;
         for stmt in tree {
-            dbg!("hit stmt");
             match stmt {
                 Stmt::Expr(e) => self.current_subtree = Some(e),
                 Stmt::Block(_) => todo!("Блоки выражений"),
