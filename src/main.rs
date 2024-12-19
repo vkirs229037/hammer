@@ -8,7 +8,7 @@ mod error;
 use cli::Cli;
 use error::HammerError;
 use parser::lexer::Lexer;
-use parser::ast::{AstBuilder, AstNode};
+use parser::ast::AstBuilder;
 use compile::compiler::Compiler;
 use vm::vm::VM;
 

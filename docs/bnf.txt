@@ -1,4 +1,8 @@
-<expr> -> <term>
+<program> -> <stmt> ";" <program> | <stmt>
+<stmt> -> <expr> | <block>
+<block> -> "{" <program> "}"
+<expr> -> <term> | <func>
+<func> -> IDENT "(" <expr> ")"
 <term> -> <factor> TERM_OP <term> | <factor>
 <factor> -> <unary> FACT_OP <factor> | <unary>
 <unary> -> UNARY_OP <unary> | <primary>

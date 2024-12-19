@@ -148,15 +148,15 @@ impl Cli {
             }
         };
 
-        let tree = ast_builder.tree();
-        let mut compiler = match Compiler::new(&tree, self.out_file.clone().expect("При компиляции значение out_file всегда задано")) {
+        let tree = ast_builder.tree;
+        let mut compiler = match Compiler::new(self.out_file.clone().expect("При компиляции значение out_file всегда задано")) {
             Ok(c) => c,
             Err(e) => {
                 println!("Ошибка: {e}"); 
                 return Err(HammerError::Compile(e));
             }
         };
-        match compiler.compile() {
+        match compiler.compile(tree) {
             Ok(()) => {
                 let file = self.out_file.clone().expect("При компиляции значение out_file всегда задано");
                 println!("Компиляция прошла успешно: {file}");
