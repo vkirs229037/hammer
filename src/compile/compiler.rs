@@ -121,8 +121,11 @@ impl Compiler {
                     _ => todo!("Неопределенная функция {func:?}"),
                 }
             },
-            Expr::Variable(var) => {
-                todo!("Компиляция переменных")
+            Expr::Variable(var, loc) => {
+                let idx = *self.variable_numbers.get(&var).expect("На этапе построения дерева должно было быть определено, что эта переменная не объявлена");
+                self.write_out(&[0x13], file);
+                let idx_bytes = u32::to_le_bytes(idx); 
+                self.write_out(&idx_bytes, file)
             }
             Expr::None => panic!("неожиданное появление AstNode::None"),
         }
