@@ -43,6 +43,7 @@ impl Compiler {
                 },
                 Stmt::Block(_) => todo!("Блоки выражений"),
                 Stmt::Decl(var, expr) => self.compile_decl(&mut file, var, expr, &variables)?,
+                Stmt::Reassign(var, expr) => self.compile_reassign(&mut file, var, expr, &variables)?
             };
         }
         self.write_out(&[0xff], &mut file)?;
@@ -62,6 +63,16 @@ impl Compiler {
         self.write_out(&[0x12], file)?;
         let idx: [u8; 4] = u32::to_le_bytes(self.last_variable_number);
         self.last_variable_number += 1;
+        self.write_out(&idx, file)?;
+        Ok(())
+    }
+
+    fn compile_reassign(&mut self, file: &mut fs::File, var: Variable, expr: Box<Expr>, variables: &Vec<Variable>) -> Result<(), CompileError> {
+        self.current_subtree = Some(expr);
+        self.compile_expr(file, variables)?;
+        let var_number = self.variable_numbers[&var];
+        self.write_out(&[0x12], file)?;
+        let idx: [u8; 4] = u32::to_le_bytes(var_number);
         self.write_out(&idx, file)?;
         Ok(())
     }
