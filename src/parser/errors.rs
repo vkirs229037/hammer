@@ -20,6 +20,7 @@ pub enum ParseError {
     UnmatchingBrace(Loc),
     UnexpectedToken(Loc),
     ExpectedSemi(Loc),
+    ExpectedParen(Loc),
 }
 
 impl fmt::Display for ParseError {
@@ -29,6 +30,7 @@ impl fmt::Display for ParseError {
             Self::UnmatchingBrace(loc) => write!(f, "[{loc}] неверная скобочная последовательность"),
             Self::UnexpectedToken(loc) => write!(f, "[{loc}] неожиданный токен"),
             Self::ExpectedSemi(loc) => write!(f, "[{loc}] ожидалась точка с запятой"),
+            Self::ExpectedParen(loc) => write!(f, "[{loc}] ожидалась скобка"),
         }
     }
 }

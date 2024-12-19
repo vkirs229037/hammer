@@ -34,8 +34,9 @@ impl AstBuilder {
 
     pub fn parse(&mut self) -> Result<(), ParseError> {
         loop { 
+            dbg!("peeked", &self.peek()?);
             let stmt;
-            match &self.tokens[self.cursor].ttype {
+            match self.peek()?.ttype {
                 TokenType::Eof => break,
                 _ => {
                     stmt = Stmt::Expr(Box::new(self.expr()?));
@@ -46,11 +47,25 @@ impl AstBuilder {
                 }
             }
         }
+        dbg!(&self.tree);
         Ok(())
     }
 
     fn expr(&mut self) -> Result<Expr, ParseError> {
-        self.term()
+        match &self.peek()?.ttype {
+            TokenType::Builtin(_) => {
+                let func = self.consume()?.clone();
+                if !self.match_ttype(&[TokenType::ParenLeft])? {
+                    return Err(ParseError::ExpectedParen(self.peek()?.loc.clone()))
+                }
+                let expr = self.expr()?;
+                if !self.match_ttype(&[TokenType::ParenRight])? {
+                    return Err(ParseError::ExpectedParen(self.peek()?.loc.clone()))
+                }
+                Ok(Expr::Func(func, Box::new(expr)))
+            },
+            _ => self.term(),
+        }
     }
 
     fn term(&mut self) -> Result<Expr, ParseError> {
