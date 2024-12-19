@@ -152,7 +152,8 @@ impl VM {
                         self.stack.push(f64::abs(arg));
                     },
                     _ => return Err(InterpretationError::UnknownBuiltin)
-                }
+                };
+                self.pc += 3;
             }
             Instruction::DBG => {
                 let a = self.pop_stack()?;
