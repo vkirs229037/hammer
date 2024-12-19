@@ -31,10 +31,15 @@ impl Compiler {
                                              .map_err(|e| CompileError::FileError(self.file_name.clone(), e))?;
         for stmt in tree {
             match stmt {
-                Stmt::Expr(e) => self.current_subtree = Some(e),
+                Stmt::Expr(e) => {
+                    self.current_subtree = Some(e);
+                    self.compile_expr(&mut file)?;
+                },
                 Stmt::Block(_) => todo!("Блоки выражений"),
+                Stmt::Decl(var, expr) => {
+                    todo!("Переменные")
+                }
             };
-            self.compile_expr(&mut file)?;
         }
         self.write_out(&[0xff], &mut file)?;
         for c in &self.const_table {
