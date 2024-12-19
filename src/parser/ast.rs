@@ -17,7 +17,7 @@ pub enum Expr {
     Grouping(Box<Self>),
     Binary(Box<Self>, Token, Box<Self>),
     Unary(Token, Box<Self>),
-    Variable(Token),
+    Variable(Variable, Loc),
     None,
 }
 
@@ -172,11 +172,10 @@ impl AstBuilder {
             },
             TokenType::ParenRight => Err(ParseError::UnmatchingBrace(token.loc.clone())),
             TokenType::Ident(id) => {
-                if !self.variables.iter().map(|v| v.name.clone()).any(|name| name == *id) {
-                    Err(ParseError::UnknownVariable(token.loc.clone()))
-                }
-                else {
-                    Ok(Expr::Variable(token.clone()))
+                let found_var = self.variables.iter().find(|var| var.name == *id);
+                match found_var {
+                    None => Err(ParseError::UnknownVariable(token.loc.clone())),
+                    Some(var) => Ok(Expr::Variable(var.clone(), token.loc.clone()))
                 }
             },
             _ => Err(ParseError::UnexpectedToken(token.loc.clone()))
