@@ -7,7 +7,8 @@ use crate::parser::errors::*;
 pub enum Stmt {
     Block(Vec<Box<Self>>),
     Expr(Box<Expr>),
-    Decl(Variable, Box<Expr>)
+    Decl(Variable, Box<Expr>),
+    Reassign(Variable, Box<Expr>)
 }
 
 #[derive(Clone, Debug)]
@@ -64,13 +65,26 @@ impl AstBuilder {
     pub fn parse(&mut self) -> Result<(), ParseError> {
         loop { 
             let stmt;
-            match self.peek()?.ttype {
+            match &self.peek()?.ttype {
                 TokenType::Eof => break,
                 TokenType::Keyword(Kw::Let) => {
                     self.consume()?;
                     stmt = self.decl()?;
                     self.tree.push(stmt);
-                }
+                },
+                // Здесь вполне возможен вызов определенной функции. 
+                // Хоть сейчас и не поддерживается такое, 
+                // я хочу сейчас обеспечить поддержку этого
+                TokenType::Ident(id) => {
+                    if self.peek()?.ttype == TokenType::ParenLeft {
+                        stmt = Stmt::Expr(Box::new(self.expr()?));
+                        self.tree.push(stmt);
+                    }
+                    else {
+                        stmt = self.reassign()?;
+                        self.tree.push(stmt);
+                    }
+                },
                 _ => {
                     stmt = Stmt::Expr(Box::new(self.expr()?));
                     self.tree.push(stmt);
@@ -99,6 +113,24 @@ impl AstBuilder {
         let var = Variable { name: name.to_string(), initialized };
         self.variables.push(var.clone());
         Ok(Stmt::Decl(var, Box::new(expr)))
+    }
+
+    fn reassign(&mut self) -> Result<Stmt, ParseError> {
+        let token = &self.consume()?.clone();
+        let Token { ttype: TokenType::Ident(varname), loc: _ } = token else {
+            panic!("Неожиданная ситуация: должен был быть Ident")
+        };
+        if !self.match_ttype(&[TokenType::Assign])? {
+            return Err(ParseError::ExpectedAssign(self.prev().loc.clone()))
+        }
+        let var;
+        let found_var = self.variables.iter().find(|var| var.name == *varname);
+        match found_var {
+            None => return Err(ParseError::UnknownVariable(self.prev().loc.clone())),
+            Some(v) => var = v.clone(),
+        }
+        let expr = self.expr()?;
+        Ok(Stmt::Reassign(var, Box::new(expr)))
     }
 
     fn expr(&mut self) -> Result<Expr, ParseError> {
