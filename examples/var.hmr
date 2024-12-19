@@ -1,3 +1,4 @@
 let a = 1;
-let b = abs(2 - 5);
-println(a + b * b);
+let b = 2;
+a = 9990;
+println(a + b);
