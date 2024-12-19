@@ -34,7 +34,6 @@ impl AstBuilder {
 
     pub fn parse(&mut self) -> Result<(), ParseError> {
         loop { 
-            dbg!("peeked", &self.peek()?);
             let stmt;
             match self.peek()?.ttype {
                 TokenType::Eof => break,
@@ -47,7 +46,6 @@ impl AstBuilder {
                 }
             }
         }
-        dbg!(&self.tree);
         Ok(())
     }
 
