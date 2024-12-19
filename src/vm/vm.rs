@@ -74,6 +74,8 @@ impl VM {
     fn run_one_instr(&mut self) -> Result<(), InterpretationError> {
         let inst: Instruction = self.get_byte(0)?
                                     .try_into()?;
+        dbg!(&inst);
+        dbg!(&self.stack);
         match inst {
             Instruction::NOP => { },
             Instruction::PUSH => {
@@ -168,7 +170,8 @@ impl VM {
                 }
                 else {
                     panic!("Ошибка")
-                }
+                };
+                self.pc += 5;
             },
             Instruction::LFV => {
                 let idx = self.next_4_bytes()? as usize;
@@ -178,7 +181,8 @@ impl VM {
                 }
                 else {
                     panic!("Ошибка")
-                }
+                };
+                self.pc += 5;
             }
             Instruction::DBG => {
                 let a = self.pop_stack()?;
