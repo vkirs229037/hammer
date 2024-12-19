@@ -91,6 +91,8 @@ impl AstBuilder {
             if !self.match_ttype(&[TokenType::Semicolon])? {
                 return Err(ParseError::ExpectedSemi(self.prev().loc.clone()))
             }
+            dbg!(&self.tree[self.tree.len() - 1]);
+            dbg!("--------------------------------------");
         }
         Ok(())
     }
