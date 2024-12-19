@@ -39,6 +39,11 @@ pub struct AstBuilder {
     pub variables: Vec<Variable>
 }
 
+pub struct Ast {
+    pub tree: Vec<Stmt>,
+    pub variables: Vec<Variable>,
+}
+
 impl AstBuilder {
     pub fn new(tokens: Vec<Token>) -> Self {
         Self {
@@ -46,6 +51,13 @@ impl AstBuilder {
             cursor: 0,
             tree: vec![],
             variables: vec![]
+        }
+    }
+
+    pub fn ast(self) -> Ast {
+        Ast {
+            tree: self.tree, 
+            variables: self.variables
         }
     }
 

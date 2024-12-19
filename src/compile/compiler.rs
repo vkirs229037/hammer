@@ -1,4 +1,4 @@
-use crate::parser::ast::{Stmt, Expr};
+use crate::parser::ast::{Ast, Expr, Stmt, Variable};
 use crate::parser::tokens::{TokenType, Token, BIn};
 use crate::vm::vm::Value;
 use crate::compile::errors::*;
@@ -9,7 +9,8 @@ use std::io::{self, Write};
 pub struct Compiler {
     current_subtree: Option<Box<Expr>>,
     file_name: String,
-    const_table: Vec<Value>
+    const_table: Vec<Value>,
+    variables: Vec<Variable>
 }
 
 impl Compiler {
@@ -22,7 +23,7 @@ impl Compiler {
         Ok(compiler)
     }
 
-    pub fn compile(&mut self, tree: Vec<Stmt>) -> Result<(), CompileError> {
+    pub fn compile(&mut self, ast: Ast) -> Result<(), CompileError> {
         let path = path::Path::new(&self.file_name);
         let mut file = fs::OpenOptions::new().write(true)
                                              .create(true)
