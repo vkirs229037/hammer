@@ -1,4 +1,5 @@
 let a;
+let b;
 a = 1;
-let b = 2;
+b = a;
 println(a + b);
