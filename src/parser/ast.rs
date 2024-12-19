@@ -7,7 +7,7 @@ use crate::parser::errors::*;
 pub enum Stmt {
     Block(Vec<Box<Self>>),
     Expr(Box<Expr>),
-    Decl(Variable, Box<Expr>),
+    Decl(Variable, Option<Box<Expr>>),
     Reassign(Variable, Box<Expr>)
 }
 
@@ -22,15 +22,10 @@ pub enum Expr {
     None,
 }
 
-// Пока что поддерживаются только сразу
-// инициализируемые переменные
-// Конечно, в жизни никогда так не бывает,
-// поэтому в будущем нужно будет это учесть
-// TODO
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Variable {
-    name: String,
-    initialized: bool
+    pub name: String,
+    pub initialized: bool
 }
 
 pub struct AstBuilder {
@@ -99,20 +94,22 @@ impl AstBuilder {
 
     fn decl(&mut self) -> Result<Stmt, ParseError> {
         let name;
-        // См. определение структуры Variable
-        let initialized = true;
         let token = &self.consume()?.clone();
         match &token.ttype {
             TokenType::Ident(id) => name = id,
             _ => return Err(ParseError::ExpectedIdent(self.prev().loc.clone()))
         }
-        if !self.match_ttype(&[TokenType::Assign])? {
-            return Err(ParseError::ExpectedAssign(self.prev().loc.clone()))
+        if self.match_ttype(&[TokenType::Assign])? {
+            let expr = self.expr()?;
+            let var = Variable { name: name.to_string(), initialized: true, };
+            self.variables.push(var.clone());
+            Ok(Stmt::Decl(var, Some(Box::new(expr))))
         }
-        let expr = self.expr()?;
-        let var = Variable { name: name.to_string(), initialized };
-        self.variables.push(var.clone());
-        Ok(Stmt::Decl(var, Box::new(expr)))
+        else {
+            let var = Variable { name: name.to_string(), initialized: false, };
+            self.variables.push(var.clone());
+            Ok(Stmt::Decl(var, None))
+        }
     }
 
     fn reassign(&mut self) -> Result<Stmt, ParseError> {
@@ -123,12 +120,13 @@ impl AstBuilder {
         if !self.match_ttype(&[TokenType::Assign])? {
             return Err(ParseError::ExpectedAssign(self.prev().loc.clone()))
         }
-        let var;
+        let mut var;
         let found_var = self.variables.iter().find(|var| var.name == *varname);
         match found_var {
             None => return Err(ParseError::UnknownVariable(loc.clone())),
             Some(v) => var = v.clone(),
         }
+        var.initialized = true;
         let expr = self.expr()?;
         Ok(Stmt::Reassign(var, Box::new(expr)))
     }

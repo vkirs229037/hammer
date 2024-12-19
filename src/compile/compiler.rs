@@ -56,14 +56,16 @@ impl Compiler {
         Ok(())
     }
 
-    fn compile_decl(&mut self, file: &mut fs::File, var: Variable, expr: Box<Expr>, variables: &Vec<Variable>) -> Result<(), CompileError> {
-        self.current_subtree = Some(expr);
-        self.compile_expr(file, variables)?;
+    fn compile_decl(&mut self, file: &mut fs::File, var: Variable, expr: Option<Box<Expr>>, variables: &Vec<Variable>) -> Result<(), CompileError> {
+        if expr.is_some() {
+            self.current_subtree = expr;
+            self.compile_expr(file, variables)?;
+            self.write_out(&[0x12], file)?;
+            let idx: [u8; 4] = u32::to_le_bytes(self.last_variable_number);
+            self.write_out(&idx, file)?;
+        }
         self.variable_numbers.insert(var, self.last_variable_number);
-        self.write_out(&[0x12], file)?;
-        let idx: [u8; 4] = u32::to_le_bytes(self.last_variable_number);
         self.last_variable_number += 1;
-        self.write_out(&idx, file)?;
         Ok(())
     }
 
@@ -133,8 +135,11 @@ impl Compiler {
                 }
             },
             Expr::Variable(var, loc) => {
+                if !var.initialized {
+                    return Err(CompileError::UninitializedVar(loc));
+                }
                 let idx = *self.variable_numbers.get(&var).expect("На этапе построения дерева должно было быть определено, что эта переменная не объявлена");
-                self.write_out(&[0x13], file);
+                self.write_out(&[0x13], file)?;
                 let idx_bytes = u32::to_le_bytes(idx); 
                 self.write_out(&idx_bytes, file)
             }
