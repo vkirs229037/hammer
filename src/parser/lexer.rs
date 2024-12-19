@@ -74,6 +74,10 @@ impl Lexer {
                 TokenType::Builtin(BIn::Println),
                 Loc::new(self.file.clone(), self.line, self.col)
             )),
+            "let" => Ok(Token::new(
+                TokenType::Keyword(Kw::Let),
+                Loc::new(self.file.clone(), self.line, self.col)
+            )),
             _ => Err(LexError::UnknownLexem(Loc::new(self.file.clone(), self.line, self.col)))
         }?;
         self.tokens.push(token);
