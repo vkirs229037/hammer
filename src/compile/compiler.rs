@@ -37,9 +37,7 @@ impl Compiler {
                     self.compile_expr(&mut file, &variables)?;
                 },
                 Stmt::Block(_) => todo!("Блоки выражений"),
-                Stmt::Decl(var, expr) => {
-                    todo!("Переменные")
-                }
+                Stmt::Decl(var, expr) => self.compile_decl(&mut file, var, expr, &variables)?,
             };
         }
         self.write_out(&[0xff], &mut file)?;
@@ -50,6 +48,10 @@ impl Compiler {
             self.write_out(&bytes, &mut file)?;
         }
         Ok(())
+    }
+
+    fn compile_decl(&mut self, file: &mut fs::File, var: Variable, expr: Box<Expr>, variables: &Vec<Variable>) -> Result<(), CompileError> {
+        todo!()
     }
 
     fn compile_expr(&mut self, file: &mut fs::File, variables: &Vec<Variable>) -> Result<(), CompileError> {
