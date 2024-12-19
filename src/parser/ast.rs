@@ -25,19 +25,20 @@ pub enum Expr {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Variable {
     pub name: String,
-    pub initialized: bool
 }
 
 pub struct AstBuilder {
     tokens: Vec<Token>,
     cursor: usize,
-    pub tree: Vec<Stmt>,
-    pub variables: Vec<Variable>
+    initialized: HashMap<Variable, bool>,
+    tree: Vec<Stmt>,
+    variables: Vec<Variable>
 }
 
 pub struct Ast {
     pub tree: Vec<Stmt>,
     pub variables: Vec<Variable>,
+    pub initialized: HashMap<Variable, bool>
 }
 
 impl AstBuilder {
@@ -45,6 +46,7 @@ impl AstBuilder {
         Self {
             tokens,
             cursor: 0,
+            initialized: HashMap::new(),
             tree: vec![],
             variables: vec![]
         }
@@ -53,7 +55,8 @@ impl AstBuilder {
     pub fn ast(self) -> Ast {
         Ast {
             tree: self.tree, 
-            variables: self.variables
+            variables: self.variables,
+            initialized: self.initialized
         }
     }
 
@@ -101,12 +104,14 @@ impl AstBuilder {
         }
         if self.match_ttype(&[TokenType::Assign])? {
             let expr = self.expr()?;
-            let var = Variable { name: name.to_string(), initialized: true, };
+            let var = Variable { name: name.to_string() };
+            self.initialized.insert(var.clone(), true);
             self.variables.push(var.clone());
             Ok(Stmt::Decl(var, Some(Box::new(expr))))
         }
         else {
-            let var = Variable { name: name.to_string(), initialized: false, };
+            let var = Variable { name: name.to_string() };
+            self.initialized.insert(var.clone(), false);
             self.variables.push(var.clone());
             Ok(Stmt::Decl(var, None))
         }
@@ -120,13 +125,13 @@ impl AstBuilder {
         if !self.match_ttype(&[TokenType::Assign])? {
             return Err(ParseError::ExpectedAssign(self.prev().loc.clone()))
         }
-        let mut var;
+        let var;
         let found_var = self.variables.iter().find(|var| var.name == *varname);
         match found_var {
             None => return Err(ParseError::UnknownVariable(loc.clone())),
             Some(v) => var = v.clone(),
         }
-        var.initialized = true;
+        self.initialized.insert(var.clone(), true);
         let expr = self.expr()?;
         Ok(Stmt::Reassign(var, Box::new(expr)))
     }
