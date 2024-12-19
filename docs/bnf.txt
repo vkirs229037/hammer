@@ -11,7 +11,7 @@ factor -> unary FACT_OP factor | unary
 unary -> UNARY_OP unary | primary
 primary -> NUMBER | IDENT | "(" expr ")" 
 
-assign -> let IDENT = EXPR
+assign -> let IDENT = <expr> | IDENT = <expr>
 
 TERM_OP := +, -
 FACT_OP := *, /
