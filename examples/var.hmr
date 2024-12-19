@@ -1,4 +1,4 @@
-let a = 1;
+let a;
+a = 1;
 let b = 2;
-c = 9990;
 println(a + b);
