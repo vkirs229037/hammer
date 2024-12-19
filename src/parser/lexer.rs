@@ -63,8 +63,8 @@ impl Lexer {
         iter::once(c).chain(iter::from_fn(|| iterator.by_ref().next_if(|x| func(*x)))).collect()
     }
 
-    fn parse_ident(&mut self, buf: String) -> Result<Token, LexError> {
-        match buf.as_str() {
+    fn parse_ident(&mut self, buf: String) -> Result<(), LexError> {
+        let token = match buf.as_str() {
             "abs" => Ok(Token::new(
                 TokenType::Builtin(BIn::Abs),
                 Loc::new(self.file.clone(), self.line, self.col)
@@ -74,7 +74,9 @@ impl Lexer {
                 Loc::new(self.file.clone(), self.line, self.col)
             )),
             _ => Err(LexError::UnknownLexem(Loc::new(self.file.clone(), self.line, self.col)))
-        }
+        }?;
+        self.tokens.push(token);
+        Ok(())
     }
 
     fn parse_numlit(&mut self, buf: String) -> Result<(), LexError> {
