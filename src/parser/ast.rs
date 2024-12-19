@@ -26,7 +26,7 @@ pub enum Expr {
 // Конечно, в жизни никогда так не бывает,
 // поэтому в будущем нужно будет это учесть
 // TODO
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Variable {
     name: String,
     initialized: bool
@@ -171,7 +171,14 @@ impl AstBuilder {
                 Ok(Expr::Grouping(Box::new(expr)))
             },
             TokenType::ParenRight => Err(ParseError::UnmatchingBrace(token.loc.clone())),
-            TokenType::Ident(id) => Ok(Expr::Variable(token.clone())),
+            TokenType::Ident(id) => {
+                if !self.variables.iter().map(|v| v.name.clone()).any(|name| name == *id) {
+                    Err(ParseError::UnknownVariable(token.loc.clone()))
+                }
+                else {
+                    Ok(Expr::Variable(token.clone()))
+                }
+            },
             _ => Err(ParseError::UnexpectedToken(token.loc.clone()))
         }
     }
