@@ -58,9 +58,9 @@ impl Compiler {
         match *self.current_subtree.clone().unwrap() {
             Expr::Binary(left, op, right) => {
                 self.current_subtree = Some(left);
-                self.compile_expr(file);
+                self.compile_expr(file, variables);
                 self.current_subtree = Some(right);
-                self.compile_expr(file);
+                self.compile_expr(file, variables);
                 match op.ttype {
                     TokenType::OpPlus => self.write_out(&[0x02], file),
                     TokenType::OpMinus => self.write_out(&[0x03], file),
@@ -71,7 +71,7 @@ impl Compiler {
             },
             Expr::Unary(op, expr) => {
                 self.current_subtree = Some(expr);
-                self.compile_expr(file);
+                self.compile_expr(file, variables);
                 match op.ttype { 
                     TokenType::OpMinus => self.write_out(&[0x06], file),
                     _ => Err(CompileError::ExpectedOp(op.loc.clone()))
@@ -79,7 +79,7 @@ impl Compiler {
             },
             Expr::Grouping(expr) => {
                 self.current_subtree = Some(expr);
-                self.compile_expr(file)
+                self.compile_expr(file, variables)
             },
             Expr::Literal(val) => {
                 let index = self.const_table.len();
@@ -95,7 +95,7 @@ impl Compiler {
             },
             Expr::Func(func, expr) => {
                 self.current_subtree = Some(expr);
-                self.compile_expr(file);
+                self.compile_expr(file, variables);
                 match func.ttype {
                     TokenType::Builtin(bin) => {
                         self.write_out(&[0x11], file)?;
@@ -107,6 +107,9 @@ impl Compiler {
                     _ => todo!("Неопределенная функция {func:?}"),
                 }
             },
+            Expr::Variable(var) => {
+                todo!("Компиляция переменных")
+            }
             Expr::None => panic!("неожиданное появление AstNode::None"),
         }
     }
