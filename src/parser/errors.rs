@@ -23,6 +23,7 @@ pub enum ParseError {
     ExpectedParen(Loc),
     ExpectedIdent(Loc),
     ExpectedAssign(Loc),
+    UnknownVariable(Loc),
 }
 
 impl fmt::Display for ParseError {
@@ -35,6 +36,7 @@ impl fmt::Display for ParseError {
             Self::ExpectedParen(loc) => write!(f, "[{loc}] ожидалась скобка"),
             Self::ExpectedIdent(loc) => write!(f, "[{loc}] ожидался идентификатор"),
             Self::ExpectedAssign(loc) => write!(f, "[{loc}] ожидался знак присвоения ="),
+            Self::UnknownVariable(loc) => write!(f, "[{loc}] неизвестная переменная"),
         }
     }
 }
