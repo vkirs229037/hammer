@@ -2,6 +2,7 @@ use crate::parser::ast::{Expr, Stmt, Variable};
 use crate::parser::tokens::{TokenType, Token, BIn};
 use crate::vm::vm::Value;
 use crate::compile::errors::*;
+use std::collections::HashMap;
 use std::fs;
 use std::path;
 use std::io::{self, Write};
@@ -10,7 +11,9 @@ use std::rc::Rc;
 pub struct Compiler {
     current_subtree: Option<Box<Expr>>,
     file_name: String,
-    const_table: Vec<Value>
+    const_table: Vec<Value>,
+    variable_numbers: HashMap<Variable, u32>,
+    last_variable_number: u32,
 }
 
 impl Compiler {
@@ -18,7 +21,9 @@ impl Compiler {
         let mut compiler = Self { 
             current_subtree: None,
             file_name: out_file_path,
-            const_table: vec![]
+            const_table: vec![],
+            variable_numbers: HashMap::new(),
+            last_variable_number: 0
         };
         Ok(compiler)
     }
@@ -51,7 +56,14 @@ impl Compiler {
     }
 
     fn compile_decl(&mut self, file: &mut fs::File, var: Variable, expr: Box<Expr>, variables: &Vec<Variable>) -> Result<(), CompileError> {
-        todo!()
+        self.current_subtree = Some(expr);
+        self.compile_expr(file, variables)?;
+        self.variable_numbers.insert(var, self.last_variable_number);
+        self.write_out(&[0x12], file)?;
+        let idx: [u8; 4] = u32::to_le_bytes(self.last_variable_number);
+        self.last_variable_number += 1;
+        self.write_out(&idx, file)?;
+        Ok(())
     }
 
     fn compile_expr(&mut self, file: &mut fs::File, variables: &Vec<Variable>) -> Result<(), CompileError> {
