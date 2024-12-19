@@ -1,5 +1,5 @@
 use crate::parser::ast::{Stmt, Expr};
-use crate::parser::tokens::{TokenType, Token};
+use crate::parser::tokens::{TokenType, Token, BIn};
 use crate::vm::vm::Value;
 use crate::compile::errors::*;
 use std::fs;
@@ -36,11 +36,6 @@ impl Compiler {
             };
             self.compile_expr(&mut file)?;
         }
-        // TODO: Это нужно будет убрать
-        // Также это НЕ будет работать если в программе
-        // только одно выражение
-        self.write_out(&[0xfe], &mut file)?;
-        self.write_out(&[0xfe], &mut file)?;
         self.write_out(&[0xff], &mut file)?;
         for c in &self.const_table {
             // TODO: Типы
@@ -92,7 +87,20 @@ impl Compiler {
                 self.write_out(&[0x01], file)?;
                 self.write_out(&u16::to_le_bytes(index as u16), file)
             },
-            Expr::Func(_, _) => todo!("Компиляция функций"),
+            Expr::Func(func, expr) => {
+                self.current_subtree = Some(expr);
+                self.compile_expr(file);
+                match func.ttype {
+                    TokenType::Builtin(bin) => {
+                        self.write_out(&[0x11], file)?;
+                        match bin {
+                            BIn::Println => self.write_out(&[0x00, 0x00], file),
+                            BIn::Abs => self.write_out(&[0x01, 0x00], file),
+                        }
+                    },
+                    _ => todo!("Неопределенная функция {func:?}"),
+                }
+            },
             Expr::None => panic!("неожиданное появление AstNode::None"),
         }
     }
