@@ -79,7 +79,10 @@ impl Lexer {
                 TokenType::Keyword(Kw::Let),
                 loc,
             )),
-            _ => Err(LexError::UnknownLexem(loc))
+            id => Ok(Token::new(
+                TokenType::Ident(id.to_string()),
+                loc,
+            )),
         }?;
         self.tokens.push(token);
         Ok(())
