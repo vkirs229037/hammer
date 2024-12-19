@@ -138,6 +138,21 @@ impl VM {
             Instruction::JBACK => {
                 let offset: u16 = self.next_2_bytes()?;
                 self.pc -= offset as usize;
+            },
+            Instruction::BIN => {
+                let func_number: u16 = self.next_2_bytes()?;
+                match func_number {
+                    // println
+                    0x0000 => {
+                        let arg = self.pop_stack()?;
+                        println!("{arg}");
+                    },
+                    0x0001 => {
+                        let arg = self.pop_stack()?;
+                        self.stack.push(f64::abs(arg));
+                    },
+                    _ => return Err(InterpretationError::UnknownBuiltin)
+                }
             }
             Instruction::DBG => {
                 let a = self.pop_stack()?;

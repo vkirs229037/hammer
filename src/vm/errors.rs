@@ -6,6 +6,7 @@ pub enum InterpretationError {
     BadConstsIndexError,
     EmptyStackError,
     ZeroDivisionError,
+    UnknownBuiltin,
 }
 
 impl fmt::Display for InterpretationError {
@@ -16,6 +17,7 @@ impl fmt::Display for InterpretationError {
             InterpretationError::BadConstsIndexError => write!(f, "индекс таблицы констант вышел за границы"),
             InterpretationError::EmptyStackError => write!(f, "стек оказался пустым"),
             InterpretationError::ZeroDivisionError => write!(f, "деление на 0"),
+            InterpretationError::UnknownBuiltin => write!(f, "неизвестная встроенная функция"),
         }
     }
 }
