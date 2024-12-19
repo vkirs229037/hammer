@@ -6,6 +6,7 @@ pub enum CompileError {
     FileError(String, io::Error),
     ExpectedOp(Loc),
     ConstTableOverflow,
+    UninitializedVar(Loc)
 }
 
 impl fmt::Display for CompileError {
@@ -14,6 +15,7 @@ impl fmt::Display for CompileError {
             Self::FileError(filename, error) => write!(f, "[{filename}] {error}"),
             Self::ExpectedOp(loc) => write!(f, "[{loc}] ожидался знак операции"),
             Self::ConstTableOverflow => write!(f, "переполнение таблицы констант"),
+            Self::UninitializedVar(loc) => write!(f, "[{loc}] переменная не инициализирована"),
         }
     }
 }
