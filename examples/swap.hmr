@@ -1,0 +1,9 @@
+let a = 5;
+let b;
+
+let temp = a;
+let a = b;
+let b = temp;
+
+println(a);
+println(b);
