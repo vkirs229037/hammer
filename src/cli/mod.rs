@@ -130,11 +130,10 @@ impl Cli {
     fn compile(&self, input_file: &mut fs::File) -> Result<(), HammerError> {
         let mut program: String = String::new();
         input_file.read_to_string(&mut program);
-        let mut lexer = Lexer::new("module".to_owned(), program);
+        let mut lexer = Lexer::new(self.in_file.clone().unwrap(), program);
         match lexer.lex() {
             Ok(()) => { }
-            Err(e) => { 
-                println!("{e}");
+            Err(e) => {
                 return Err(HammerError::Lex(e));
             }
         }
@@ -143,7 +142,6 @@ impl Cli {
         match ast_builder.parse() {
             Ok(()) => { }
             Err(e) => {
-                println!("Ошибка: {e}");
                 return Err(HammerError::Parse(e));
             }
         };
@@ -152,7 +150,6 @@ impl Cli {
         let mut compiler = match Compiler::new(self.out_file.clone().expect("При компиляции значение out_file всегда задано")) {
             Ok(c) => c,
             Err(e) => {
-                println!("Ошибка: {e}"); 
                 return Err(HammerError::Compile(e));
             }
         };
@@ -162,7 +159,6 @@ impl Cli {
                 println!("Компиляция прошла успешно: {file}");
             },
             Err(e) => {
-                println!("Ошибка: {e}");
                 return Err(HammerError::Compile(e))
             }
         }
