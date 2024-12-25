@@ -30,7 +30,6 @@ pub struct Variable {
 pub struct AstBuilder {
     tokens: Vec<Token>,
     cursor: usize,
-    initialized: HashMap<Variable, bool>,
     tree: Vec<Stmt>,
     variables: Vec<Variable>
 }
@@ -38,7 +37,6 @@ pub struct AstBuilder {
 pub struct Ast {
     pub tree: Vec<Stmt>,
     pub variables: Vec<Variable>,
-    pub initialized: HashMap<Variable, bool>
 }
 
 impl AstBuilder {
@@ -46,7 +44,6 @@ impl AstBuilder {
         Self {
             tokens,
             cursor: 0,
-            initialized: HashMap::new(),
             tree: vec![],
             variables: vec![]
         }
@@ -56,7 +53,6 @@ impl AstBuilder {
         Ast {
             tree: self.tree, 
             variables: self.variables,
-            initialized: self.initialized
         }
     }
 
@@ -107,13 +103,11 @@ impl AstBuilder {
         if self.match_ttype(&[TokenType::Assign])? {
             let expr = self.expr()?;
             let var = Variable { name: name.to_string() };
-            self.initialized.insert(var.clone(), true);
             self.variables.push(var.clone());
             Ok(Stmt::Decl(var, Some(Box::new(expr))))
         }
         else {
             let var = Variable { name: name.to_string() };
-            self.initialized.insert(var.clone(), false);
             self.variables.push(var.clone());
             Ok(Stmt::Decl(var, None))
         }
@@ -133,7 +127,6 @@ impl AstBuilder {
             None => return Err(ParseError::UnknownVariable(loc.clone())),
             Some(v) => var = v.clone(),
         }
-        self.initialized.insert(var.clone(), true);
         let expr = self.expr()?;
         Ok(Stmt::Reassign(var, Box::new(expr)))
     }
