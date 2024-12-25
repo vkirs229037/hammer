@@ -13,7 +13,9 @@ impl fmt::Display for CliError {
             Self::UnknownCommand(c) => write!(f, "Ошибка: неизвестная команда {c}"),
             Self::NoCommand => write!(f, "Ошибка: не задана команда"),
             Self::NoInputFile => write!(f, "Ошибка: не задан входной файл"),
-            Self::IncorrectParam(c, param) => write!(f, "Ошибка: неверный параметр для команды {c}: {param}"),
+            Self::IncorrectParam(c, param) => {
+                write!(f, "Ошибка: неверный параметр для команды {c}: {param}")
+            }
         }
     }
 }

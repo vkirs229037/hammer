@@ -1,7 +1,10 @@
-use std::{iter::{self, Peekable}, str::Chars};
+use std::{
+    iter::{self, Peekable},
+    str::Chars,
+};
 
-use crate::parser::tokens::*;
 use crate::parser::errors::*;
+use crate::parser::tokens::*;
 
 pub struct Lexer {
     source: String,
@@ -44,7 +47,7 @@ impl Lexer {
                 }
             }
             match c {
-                c if c == '\n' => { 
+                c if c == '\n' => {
                     self.line += 1;
                     self.col = 0;
                 }
@@ -54,17 +57,31 @@ impl Lexer {
                     let len = buf.len();
                     self.parse_ident(buf)?;
                     self.col += len;
-                },
+                }
                 c if c.is_digit(10) => {
-                    buf = Self::collect_token(c, &mut source_iter, |c| c.is_digit(10) || c == '.' || c == '-');
+                    buf = Self::collect_token(c, &mut source_iter, |c| {
+                        c.is_digit(10) || c == '.' || c == '-'
+                    });
                     let len = buf.len();
                     self.parse_numlit(buf)?;
                     self.col += len;
-                },
-                '=' => { self.push_token(TokenType::Assign); self.col += 1; }
-                '+' => { self.push_token(TokenType::OpPlus); self.col += 1; }
-                '-' => { self.push_token(TokenType::OpMinus); self.col += 1; }
-                '*' => { self.push_token(TokenType::OpStar); self.col += 1; }
+                }
+                '=' => {
+                    self.push_token(TokenType::Assign);
+                    self.col += 1;
+                }
+                '+' => {
+                    self.push_token(TokenType::OpPlus);
+                    self.col += 1;
+                }
+                '-' => {
+                    self.push_token(TokenType::OpMinus);
+                    self.col += 1;
+                }
+                '*' => {
+                    self.push_token(TokenType::OpStar);
+                    self.col += 1;
+                }
                 '/' => {
                     if let Some(next_c) = source_iter.peek() {
                         if *next_c == '/' {
@@ -76,39 +93,48 @@ impl Lexer {
                     self.push_token(TokenType::OpSlash);
                     self.col += 1;
                 }
-                '(' => { self.push_token(TokenType::ParenLeft); self.col += 1; }
-                ')' => { self.push_token(TokenType::ParenRight); self.col += 1; }
-                ';' => { self.push_token(TokenType::Semicolon); self.col += 1; }
-                _ => return Err(LexError::UnknownLexem(Loc::new(self.file.clone(), self.line, self.col))),
+                '(' => {
+                    self.push_token(TokenType::ParenLeft);
+                    self.col += 1;
+                }
+                ')' => {
+                    self.push_token(TokenType::ParenRight);
+                    self.col += 1;
+                }
+                ';' => {
+                    self.push_token(TokenType::Semicolon);
+                    self.col += 1;
+                }
+                _ => {
+                    return Err(LexError::UnknownLexem(Loc::new(
+                        self.file.clone(),
+                        self.line,
+                        self.col,
+                    )))
+                }
             }
         }
         self.push_token(TokenType::Eof);
         Ok(())
     }
 
-    fn collect_token(c: char, iterator: &mut Peekable<Chars<'_>>, func: impl Fn(char) -> bool) -> String {
-        iter::once(c).chain(iter::from_fn(|| iterator.by_ref().next_if(|x| func(*x)))).collect()
+    fn collect_token(
+        c: char,
+        iterator: &mut Peekable<Chars<'_>>,
+        func: impl Fn(char) -> bool,
+    ) -> String {
+        iter::once(c)
+            .chain(iter::from_fn(|| iterator.by_ref().next_if(|x| func(*x))))
+            .collect()
     }
 
     fn parse_ident(&mut self, buf: String) -> Result<(), LexError> {
         let loc = Loc::new(self.file.clone(), self.line, self.col);
         let token = match buf.as_str() {
-            "abs" => Ok(Token::new(
-                TokenType::Builtin(BIn::Abs),
-                loc,
-            )),
-            "println" => Ok(Token::new(
-                TokenType::Builtin(BIn::Println),
-                loc,
-            )),
-            "let" => Ok(Token::new(
-                TokenType::Keyword(Kw::Let),
-                loc,
-            )),
-            id => Ok(Token::new(
-                TokenType::Ident(id.to_string()),
-                loc,
-            )),
+            "abs" => Ok(Token::new(TokenType::Builtin(BIn::Abs), loc)),
+            "println" => Ok(Token::new(TokenType::Builtin(BIn::Println), loc)),
+            "let" => Ok(Token::new(TokenType::Keyword(Kw::Let), loc)),
+            id => Ok(Token::new(TokenType::Ident(id.to_string()), loc)),
         }?;
         self.tokens.push(token);
         Ok(())
@@ -116,7 +142,9 @@ impl Lexer {
 
     fn parse_numlit(&mut self, buf: String) -> Result<(), LexError> {
         let loc = Loc::new(self.file.clone(), self.line, self.col);
-        let value = buf.parse().map_err(|_| LexError::MalformedNumLit(loc.clone()))?;
+        let value = buf
+            .parse()
+            .map_err(|_| LexError::MalformedNumLit(loc.clone()))?;
         let token = Token::new(TokenType::NumLit(value), loc);
         self.tokens.push(token);
         Ok(())
@@ -129,5 +157,5 @@ impl Lexer {
 
     pub fn tokens(&self) -> &Vec<Token> {
         &self.tokens
-    } 
+    }
 }

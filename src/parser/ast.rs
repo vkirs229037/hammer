@@ -1,20 +1,20 @@
 use std::collections::HashMap;
 
-use crate::parser::tokens::*;
 use crate::parser::errors::*;
+use crate::parser::tokens::*;
 
 #[derive(Clone, Debug)]
 pub enum Stmt {
     Block(Vec<Box<Self>>),
     Expr(Box<Expr>),
     Decl(Variable, Option<Box<Expr>>),
-    Reassign(Variable, Box<Expr>)
+    Reassign(Variable, Box<Expr>),
 }
 
 #[derive(Clone, Debug)]
 pub enum Expr {
     Func(Token, Box<Self>),
-    Literal(Token), 
+    Literal(Token),
     Grouping(Box<Self>),
     Binary(Box<Self>, Token, Box<Self>),
     Unary(Token, Box<Self>),
@@ -31,7 +31,7 @@ pub struct AstBuilder {
     tokens: Vec<Token>,
     cursor: usize,
     tree: Vec<Stmt>,
-    variables: Vec<Variable>
+    variables: Vec<Variable>,
 }
 
 pub struct Ast {
@@ -45,19 +45,19 @@ impl AstBuilder {
             tokens,
             cursor: 0,
             tree: vec![],
-            variables: vec![]
+            variables: vec![],
         }
     }
 
     pub fn ast(self) -> Ast {
         Ast {
-            tree: self.tree, 
+            tree: self.tree,
             variables: self.variables,
         }
     }
 
     pub fn parse(&mut self) -> Result<(), ParseError> {
-        loop { 
+        loop {
             let stmt;
             match &self.peek()?.ttype {
                 TokenType::Eof => break,
@@ -65,27 +65,26 @@ impl AstBuilder {
                     self.consume()?;
                     stmt = self.decl()?;
                     self.tree.push(stmt);
-                },
-                // Здесь вполне возможен вызов определенной функции. 
-                // Хоть сейчас и не поддерживается такое, 
+                }
+                // Здесь вполне возможен вызов определенной функции.
+                // Хоть сейчас и не поддерживается такое,
                 // я хочу сейчас обеспечить поддержку этого
                 TokenType::Ident(id) => {
                     if self.peek()?.ttype == TokenType::ParenLeft {
                         stmt = Stmt::Expr(Box::new(self.expr()?));
                         self.tree.push(stmt);
-                    }
-                    else {
+                    } else {
                         stmt = self.reassign()?;
                         self.tree.push(stmt);
                     }
-                },
+                }
                 _ => {
                     stmt = Stmt::Expr(Box::new(self.expr()?));
                     self.tree.push(stmt);
                 }
             }
             if !self.match_ttype(&[TokenType::Semicolon])? {
-                return Err(ParseError::ExpectedSemi(self.prev().loc.clone()))
+                return Err(ParseError::ExpectedSemi(self.prev().loc.clone()));
             }
         }
         Ok(())
@@ -96,16 +95,19 @@ impl AstBuilder {
         let token = &self.consume()?.clone();
         match &token.ttype {
             TokenType::Ident(id) => name = id,
-            _ => return Err(ParseError::ExpectedIdent(self.prev().loc.clone()))
+            _ => return Err(ParseError::ExpectedIdent(self.prev().loc.clone())),
         }
         if self.match_ttype(&[TokenType::Assign])? {
             let expr = self.expr()?;
-            let var = Variable { name: name.to_string() };
+            let var = Variable {
+                name: name.to_string(),
+            };
             self.variables.push(var.clone());
             Ok(Stmt::Decl(var, Some(Box::new(expr))))
-        }
-        else {
-            let var = Variable { name: name.to_string() };
+        } else {
+            let var = Variable {
+                name: name.to_string(),
+            };
             self.variables.push(var.clone());
             Ok(Stmt::Decl(var, None))
         }
@@ -113,11 +115,15 @@ impl AstBuilder {
 
     fn reassign(&mut self) -> Result<Stmt, ParseError> {
         let token = &self.consume()?.clone();
-        let Token { ttype: TokenType::Ident(varname), loc } = token else {
+        let Token {
+            ttype: TokenType::Ident(varname),
+            loc,
+        } = token
+        else {
             panic!("Неожиданная ситуация: должен был быть Ident")
         };
         if !self.match_ttype(&[TokenType::Assign])? {
-            return Err(ParseError::ExpectedAssign(self.prev().loc.clone()))
+            return Err(ParseError::ExpectedAssign(self.prev().loc.clone()));
         }
         let var;
         let found_var = self.variables.iter().find(|var| var.name == *varname);
@@ -134,25 +140,25 @@ impl AstBuilder {
             TokenType::Builtin(_) => {
                 let func = self.consume()?.clone();
                 if !self.match_ttype(&[TokenType::ParenLeft])? {
-                    return Err(ParseError::ExpectedParen(self.peek()?.loc.clone()))
+                    return Err(ParseError::ExpectedParen(self.peek()?.loc.clone()));
                 }
                 let expr = self.expr()?;
                 if !self.match_ttype(&[TokenType::ParenRight])? {
-                    return Err(ParseError::ExpectedParen(self.peek()?.loc.clone()))
+                    return Err(ParseError::ExpectedParen(self.peek()?.loc.clone()));
                 }
                 Ok(Expr::Func(func, Box::new(expr)))
-            },
+            }
             _ => self.term(),
         }
     }
 
     fn term(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.factor()?;
-        
+
         while self.match_ttype(&[TokenType::OpPlus, TokenType::OpMinus])? {
             let op = self.prev().clone();
             let right = self.factor()?;
-            
+
             expr = Expr::Binary(Box::new(expr), op.clone(), Box::new(right));
         }
 
@@ -165,7 +171,7 @@ impl AstBuilder {
         while self.match_ttype(&[TokenType::OpStar, TokenType::OpSlash])? {
             let op = self.prev().clone();
             let right = self.unary()?;
-            
+
             expr = Expr::Binary(Box::new(expr), op, Box::new(right));
         }
 
@@ -176,37 +182,35 @@ impl AstBuilder {
         if self.match_ttype(&[TokenType::OpMinus])? {
             let op = self.prev().clone();
             let expr = self.primary()?;
-            
-            return Ok(Expr::Unary(op, Box::new(expr)))
+
+            return Ok(Expr::Unary(op, Box::new(expr)));
         }
-        
+
         Ok(self.primary()?)
     }
 
     fn primary(&mut self) -> Result<Expr, ParseError> {
         let token = &self.consume()?.clone();
-        
+
         match &token.ttype {
             TokenType::Eof => Err(ParseError::UnexpectedEof(token.loc.clone())),
-            TokenType::NumLit(value) => { 
-                Ok(Expr::Literal(token.clone())) 
-            },
+            TokenType::NumLit(value) => Ok(Expr::Literal(token.clone())),
             TokenType::ParenLeft => {
                 let expr = self.expr()?;
                 if self.consume()?.ttype != TokenType::ParenRight {
                     return Err(ParseError::UnmatchingBrace(token.loc.clone()));
                 }
                 Ok(Expr::Grouping(Box::new(expr)))
-            },
+            }
             TokenType::ParenRight => Err(ParseError::UnmatchingBrace(token.loc.clone())),
             TokenType::Ident(id) => {
                 let found_var = self.variables.iter().find(|var| var.name == *id);
                 match found_var {
                     None => Err(ParseError::UnknownVariable(token.loc.clone())),
-                    Some(var) => Ok(Expr::Variable(var.clone(), token.loc.clone()))
+                    Some(var) => Ok(Expr::Variable(var.clone(), token.loc.clone())),
                 }
-            },
-            _ => Err(ParseError::UnexpectedToken(token.loc.clone()))
+            }
+            _ => Err(ParseError::UnexpectedToken(token.loc.clone())),
         }
     }
 
@@ -237,8 +241,9 @@ impl AstBuilder {
     }
 
     fn peek(&self) -> Result<&Token, ParseError> {
-        self.tokens.get(self.cursor)
-                    .ok_or_else(|| ParseError::UnexpectedEof(self.prev().loc.clone()))
+        self.tokens
+            .get(self.cursor)
+            .ok_or_else(|| ParseError::UnexpectedEof(self.prev().loc.clone()))
     }
 
     fn prev(&self) -> &Token {

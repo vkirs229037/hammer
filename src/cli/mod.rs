@@ -1,15 +1,23 @@
 pub mod errors;
+use crate::{
+    compile::{compiler::Compiler, errors::CompileError},
+    error::HammerError,
+    parser::{
+        ast::{Ast, AstBuilder},
+        lexer::Lexer,
+    },
+    vm::vm::VM,
+};
 use errors::*;
-use std::{env::Args, io::Read, rc::Rc};
 use regex::Regex;
 use std::fs;
-use crate::{compile::{compiler::Compiler, errors::CompileError}, error::HammerError, parser::{ast::{Ast, AstBuilder}, lexer::Lexer}, vm::vm::VM};
+use std::{env::Args, io::Read, rc::Rc};
 
 enum Command {
     Compile,
     Run(RunType),
     Inspect,
-    Help
+    Help,
 }
 
 enum RunType {
@@ -33,10 +41,12 @@ impl Cli {
         println!("  inspect <in>            исследовать файл с байткодом (команды в байткоде + список констант)");
         println!("  help                    показать эту справку")
     }
-    
+
     pub fn new(args: &mut Args) -> Result<Self, CliError> {
         let cli;
-        let _program = args.next().expect("Невозможная ситуация: нет первого аргумента командной строки");
+        let _program = args
+            .next()
+            .expect("Невозможная ситуация: нет первого аргумента командной строки");
         let command = args.next().ok_or_else(|| CliError::NoCommand)?;
         let next_arg = args.next();
         let re = Regex::new(r"\..*$").expect("\\..*$ является верным регулярным выражением");
@@ -45,20 +55,18 @@ impl Cli {
                 return Err(CliError::IncorrectParam(command, next_arg.unwrap()));
             }
             let in_file = args.next().ok_or_else(|| CliError::NoInputFile)?;
-            cli = Self { 
-                command: Command::Run(RunType::Bytecode), 
+            cli = Self {
+                command: Command::Run(RunType::Bytecode),
                 in_file: Some(in_file.clone()),
                 out_file: None,
             }
-        }
-        else {
+        } else {
             let in_file = match next_arg {
                 Some(f) => Some(f),
                 None => {
                     if command == "help" {
                         None
-                    }
-                    else {
+                    } else {
                         return Err(CliError::NoInputFile);
                     }
                 }
@@ -68,21 +76,25 @@ impl Cli {
             match command.as_str() {
                 "run" => {
                     com_type = Command::Run(RunType::Source);
-                    out_file = Some(args.next().unwrap_or(String::from(re.replace(in_file.clone().unwrap().as_str(), ""))));
-                },
+                    out_file = Some(args.next().unwrap_or(String::from(
+                        re.replace(in_file.clone().unwrap().as_str(), ""),
+                    )));
+                }
                 "compile" => {
                     com_type = Command::Compile;
-                    out_file = Some(args.next().unwrap_or(String::from(re.replace(in_file.clone().unwrap().as_str(), ""))));
-                },
+                    out_file = Some(args.next().unwrap_or(String::from(
+                        re.replace(in_file.clone().unwrap().as_str(), ""),
+                    )));
+                }
                 "inspect" => {
                     com_type = Command::Inspect;
                     out_file = None;
-                },
+                }
                 "help" => {
                     com_type = Command::Help;
                     out_file = None;
                 }
-                _ => return Err(CliError::UnknownCommand(command))
+                _ => return Err(CliError::UnknownCommand(command)),
             }
             cli = Self {
                 command: com_type,
@@ -96,30 +108,44 @@ impl Cli {
     pub fn run(&self) -> Result<(), HammerError> {
         match &self.command {
             Command::Compile => {
-                let mut input_file = match fs::OpenOptions::new().read(true).open(self.in_file.clone().unwrap()) {
+                let mut input_file = match fs::OpenOptions::new()
+                    .read(true)
+                    .open(self.in_file.clone().unwrap())
+                {
                     Ok(f) => f,
-                    Err(e) => return Err(HammerError::Compile(CompileError::FileError(self.in_file.clone().unwrap(), e))),
+                    Err(e) => {
+                        return Err(HammerError::Compile(CompileError::FileError(
+                            self.in_file.clone().unwrap(),
+                            e,
+                        )))
+                    }
                 };
                 self.compile(&mut input_file)
-            },
+            }
             Command::Run(rt) => {
-                let mut input_file = match fs::OpenOptions::new().read(true).open(self.in_file.clone().unwrap()) {
+                let mut input_file = match fs::OpenOptions::new()
+                    .read(true)
+                    .open(self.in_file.clone().unwrap())
+                {
                     Ok(f) => f,
-                    Err(e) => return Err(HammerError::Compile(CompileError::FileError(self.in_file.clone().unwrap(), e))),
+                    Err(e) => {
+                        return Err(HammerError::Compile(CompileError::FileError(
+                            self.in_file.clone().unwrap(),
+                            e,
+                        )))
+                    }
                 };
                 match rt {
-                    RunType::Bytecode => {
-                        self.interp(true)
-                    },
+                    RunType::Bytecode => self.interp(true),
                     RunType::Source => {
                         self.compile(&mut input_file)?;
                         self.interp(false)
                     }
                 }
-            },
+            }
             Command::Inspect => {
                 todo!("Исследование файла байткода");
-            },
+            }
             Command::Help => {
                 Self::usage();
                 Ok(())
@@ -132,7 +158,7 @@ impl Cli {
         input_file.read_to_string(&mut program);
         let mut lexer = Lexer::new(self.in_file.clone().unwrap(), program);
         match lexer.lex() {
-            Ok(()) => { }
+            Ok(()) => {}
             Err(e) => {
                 return Err(HammerError::Lex(e));
             }
@@ -140,14 +166,18 @@ impl Cli {
 
         let mut ast_builder = AstBuilder::new(lexer.tokens().to_vec());
         match ast_builder.parse() {
-            Ok(()) => { }
+            Ok(()) => {}
             Err(e) => {
                 return Err(HammerError::Parse(e));
             }
         };
 
         let Ast { tree, variables } = ast_builder.ast();
-        let mut compiler = match Compiler::new(self.out_file.clone().expect("При компиляции значение out_file всегда задано")) {
+        let mut compiler = match Compiler::new(
+            self.out_file
+                .clone()
+                .expect("При компиляции значение out_file всегда задано"),
+        ) {
             Ok(c) => c,
             Err(e) => {
                 return Err(HammerError::Compile(e));
@@ -155,12 +185,13 @@ impl Cli {
         };
         match compiler.compile(tree, variables) {
             Ok(()) => {
-                let file = self.out_file.clone().expect("При компиляции значение out_file всегда задано");
+                let file = self
+                    .out_file
+                    .clone()
+                    .expect("При компиляции значение out_file всегда задано");
                 println!("Компиляция прошла успешно: {file}");
-            },
-            Err(e) => {
-                return Err(HammerError::Compile(e))
             }
+            Err(e) => return Err(HammerError::Compile(e)),
         }
         Ok(())
     }
@@ -168,10 +199,15 @@ impl Cli {
     fn interp(&self, b: bool) -> Result<(), HammerError> {
         let path;
         if b {
-            path = self.in_file.clone().expect("При запуске с -b значение in_file всегда задано");
-        }
-        else {
-            path = self.out_file.clone().expect("При запуске значение out_file всегда задано");
+            path = self
+                .in_file
+                .clone()
+                .expect("При запуске с -b значение in_file всегда задано");
+        } else {
+            path = self
+                .out_file
+                .clone()
+                .expect("При запуске значение out_file всегда задано");
         }
         let mut file = match fs::OpenOptions::new().read(true).open(path.clone()) {
             Ok(f) => f,

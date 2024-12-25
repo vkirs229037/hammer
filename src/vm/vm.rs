@@ -15,7 +15,6 @@ mod vm_macros {
     }
 }
 
-
 pub struct VM {
     stack: Vec<Value>,
     program: Vec<u8>,
@@ -28,7 +27,11 @@ pub struct VM {
 impl VM {
     pub fn new(bytecode: Vec<u8>) -> Result<Self, BytecodeError> {
         let mut bytecode_iter = bytecode.into_iter();
-        let program: Vec<u8> = bytecode_iter.by_ref().take_while(|c| *c != 0xff).chain([0xff]).collect();
+        let program: Vec<u8> = bytecode_iter
+            .by_ref()
+            .take_while(|c| *c != 0xff)
+            .chain([0xff])
+            .collect();
         let const_table: Vec<u8> = bytecode_iter.collect();
         let mut vm = VM {
             stack: vec![],
@@ -46,18 +49,25 @@ impl VM {
         let len = const_table.len();
         let mut i = 0;
         while (i < len) {
-            let val_type = const_table.get(i).ok_or_else(|| BytecodeError::UnexpectedEof)?;
-            let size = *const_table.get(i + 1).ok_or_else(|| BytecodeError::UnexpectedEof)?;
-            let value_bytes = const_table.get((i + 2)..(i + 2 + size as usize)).ok_or_else(|| BytecodeError::UnexpectedEof)?;
+            let val_type = const_table
+                .get(i)
+                .ok_or_else(|| BytecodeError::UnexpectedEof)?;
+            let size = *const_table
+                .get(i + 1)
+                .ok_or_else(|| BytecodeError::UnexpectedEof)?;
+            let value_bytes = const_table
+                .get((i + 2)..(i + 2 + size as usize))
+                .ok_or_else(|| BytecodeError::UnexpectedEof)?;
             let value = f64::from_le_bytes(
-                value_bytes.try_into().map_err(|_| BytecodeError::IncorrectRep)?
+                value_bytes
+                    .try_into()
+                    .map_err(|_| BytecodeError::IncorrectRep)?,
             );
             self.consts.push(value);
             i += 2 + size as usize;
         }
         Ok(())
     }
-
 
     pub fn load_program(&mut self, program: Vec<u8>) {
         self.program = program;
@@ -72,26 +82,24 @@ impl VM {
     }
 
     fn run_one_instr(&mut self) -> Result<(), InterpretationError> {
-        let inst: Instruction = self.get_byte(0)?
-                                    .try_into()?;
+        let inst: Instruction = self.get_byte(0)?.try_into()?;
         match inst {
-            Instruction::NOP => { },
+            Instruction::NOP => {}
             Instruction::PUSH => {
                 let index: u16 = self.next_2_bytes()?;
                 let val: Value = self.get_const(index as usize)?;
                 self.stack.push(val);
                 self.pc += 3;
-                
-            },
+            }
             Instruction::ADD => {
                 exec_binop!(self, +);
-            },
+            }
             Instruction::SUB => {
                 exec_binop!(self, -);
-            },
+            }
             Instruction::MUL => {
                 exec_binop!(self, *);
-            },
+            }
             Instruction::DIV => {
                 let a = self.pop_stack()?;
                 let b = self.pop_stack()?;
@@ -100,7 +108,7 @@ impl VM {
                 }
                 self.stack.push(b / a);
                 self.pc += 1;
-            },
+            }
             Instruction::NEG => {
                 let a = self.pop_stack()?;
                 self.stack.push(-a);
@@ -108,26 +116,26 @@ impl VM {
             }
             Instruction::EQ => {
                 exec_binop!(self, ==);
-            },
+            }
             Instruction::NEQ => {
                 exec_binop!(self, !=);
-            },
+            }
             Instruction::GR => {
                 exec_binop!(self, >);
-            },
+            }
             Instruction::LS => {
                 exec_binop!(self, <);
-            },
+            }
             Instruction::GE => {
                 exec_binop!(self, >=);
-            },
+            }
             Instruction::LE => {
                 exec_binop!(self, <=);
-            },
+            }
             Instruction::JMP => {
                 let offset: u16 = self.next_2_bytes()?;
                 self.pc += offset as usize;
-            },
+            }
             Instruction::JF => {
                 let offset: u16 = self.next_2_bytes()?;
                 let a = self.pop_stack()?;
@@ -136,11 +144,11 @@ impl VM {
                 } else {
                     self.pc += 3;
                 }
-            },
+            }
             Instruction::JBACK => {
                 let offset: u16 = self.next_2_bytes()?;
                 self.pc -= offset as usize;
-            },
+            }
             Instruction::BIN => {
                 let func_number: u16 = self.next_2_bytes()?;
                 match func_number {
@@ -148,36 +156,33 @@ impl VM {
                     0x0000 => {
                         let arg = self.pop_stack()?;
                         println!("{arg}");
-                    },
+                    }
                     0x0001 => {
                         let arg = self.pop_stack()?;
                         self.stack.push(f64::abs(arg));
-                    },
-                    _ => return Err(InterpretationError::UnknownBuiltin)
+                    }
+                    _ => return Err(InterpretationError::UnknownBuiltin),
                 };
                 self.pc += 3;
-            },
+            }
             Instruction::LIV => {
                 let idx = self.next_4_bytes()? as usize;
                 let val = self.pop_stack()?;
                 if (idx < self.variables.len()) {
                     self.variables[idx] = val;
-                }
-                else if (idx == self.variables.len()) {
+                } else if (idx == self.variables.len()) {
                     self.variables.push(val);
-                }
-                else {
+                } else {
                     panic!("Ошибка")
                 };
                 self.pc += 5;
-            },
+            }
             Instruction::LFV => {
                 let idx = self.next_4_bytes()? as usize;
                 if (idx < self.variables.len()) {
                     let val = self.variables[idx];
                     self.stack.push(val);
-                }
-                else {
+                } else {
                     panic!("Ошибка")
                 };
                 self.pc += 5;
@@ -186,18 +191,19 @@ impl VM {
                 let a = self.pop_stack()?;
                 println!("{a:#}");
                 self.pc += 1;
-            },
+            }
             Instruction::HLT => {
                 self.running = false;
-            },
+            }
         }
         Ok(())
     }
 
     fn get_byte(self: &VM, offset: usize) -> Result<u8, InterpretationError> {
-        self.program.get(self.pc+offset)
-                    .ok_or_else(|| InterpretationError::UnexpectedEndError)
-                    .copied()
+        self.program
+            .get(self.pc + offset)
+            .ok_or_else(|| InterpretationError::UnexpectedEndError)
+            .copied()
     }
 
     fn next_2_bytes(self: &VM) -> Result<u16, InterpretationError> {
@@ -215,13 +221,15 @@ impl VM {
     }
 
     fn get_const(self: &VM, index: usize) -> Result<Value, InterpretationError> {
-        self.consts.get(index as usize)
-                   .ok_or_else(|| InterpretationError::BadConstsIndexError)
-                   .copied()
+        self.consts
+            .get(index as usize)
+            .ok_or_else(|| InterpretationError::BadConstsIndexError)
+            .copied()
     }
 
     fn pop_stack(self: &mut VM) -> Result<Value, InterpretationError> {
-        self.stack.pop()
-                  .ok_or_else(|| InterpretationError::EmptyStackError)
+        self.stack
+            .pop()
+            .ok_or_else(|| InterpretationError::EmptyStackError)
     }
 }

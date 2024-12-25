@@ -1,4 +1,4 @@
-pub mod lexer;
 pub mod ast;
-pub mod tokens;
 pub mod errors;
+pub mod lexer;
+pub mod tokens;

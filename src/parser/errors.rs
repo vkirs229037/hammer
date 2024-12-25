@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::parser::tokens::Loc;
+use std::fmt;
 
 pub enum LexError {
     MalformedNumLit(Loc),
@@ -30,7 +30,9 @@ impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::UnexpectedEof(loc) => write!(f, "[{loc}] неожиданный конец файла"),
-            Self::UnmatchingBrace(loc) => write!(f, "[{loc}] неверная скобочная последовательность"),
+            Self::UnmatchingBrace(loc) => {
+                write!(f, "[{loc}] неверная скобочная последовательность")
+            }
             Self::UnexpectedToken(loc) => write!(f, "[{loc}] неожиданный токен"),
             Self::ExpectedSemi(loc) => write!(f, "[{loc}] ожидалась точка с запятой"),
             Self::ExpectedParen(loc) => write!(f, "[{loc}] ожидалась скобка"),

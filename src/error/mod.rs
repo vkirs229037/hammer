@@ -11,7 +11,7 @@ pub enum HammerError {
     Lex(LexError),
     Parse(ParseError),
     Interp(InterpretationError),
-    Bytecode(BytecodeError)
+    Bytecode(BytecodeError),
 }
 
 impl fmt::Display for HammerError {

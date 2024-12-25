@@ -40,9 +40,9 @@ pub struct Loc {
 impl Loc {
     pub fn new(file: String, line: usize, col: usize) -> Self {
         Self {
-            file, 
-            line: line+1, 
-            col: col+1
+            file,
+            line: line + 1,
+            col: col + 1,
         }
     }
 }
@@ -64,9 +64,7 @@ pub struct Token {
 
 impl Token {
     pub fn new(ttype: TokenType, loc: Loc) -> Self {
-        Self {
-            ttype, loc
-        }
+        Self { ttype, loc }
     }
 }
 

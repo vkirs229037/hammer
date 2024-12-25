@@ -1,12 +1,12 @@
-use std::fmt;
 use crate::parser::tokens::*;
+use std::fmt;
 use std::io;
 
 pub enum CompileError {
     FileError(String, io::Error),
     ExpectedOp(Loc),
     ConstTableOverflow,
-    UninitializedVar(Loc)
+    UninitializedVar(Loc),
 }
 
 impl fmt::Display for CompileError {
@@ -19,4 +19,3 @@ impl fmt::Display for CompileError {
         }
     }
 }
-
