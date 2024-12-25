@@ -35,15 +35,16 @@ impl Compiler {
                                              .truncate(true)
                                              .open(path)
                                              .map_err(|e| CompileError::FileError(self.file_name.clone(), e))?;
+        let mut initialized: HashMap<Variable, bool> = HashMap::new();
         for stmt in tree {
             match stmt {
                 Stmt::Expr(e) => {
                     self.current_subtree = Some(e);
-                    self.compile_expr(&mut file, &variables, &initialized)?;
+                    self.compile_expr(&mut file, &variables, &mut initialized)?;
                 },
                 Stmt::Block(_) => todo!("Блоки выражений"),
-                Stmt::Decl(var, expr) => self.compile_decl(&mut file, var, expr, &variables, &initialized)?,
-                Stmt::Reassign(var, expr) => self.compile_reassign(&mut file, var, expr, &variables, &initialized)?
+                Stmt::Decl(var, expr) => self.compile_decl(&mut file, var, expr, &variables, &mut initialized)?,
+                Stmt::Reassign(var, expr) => self.compile_reassign(&mut file, var, expr, &variables, &mut initialized)?
             };
         }
         self.write_out(&[0xff], &mut file)?;
@@ -56,7 +57,7 @@ impl Compiler {
         Ok(())
     }
 
-    fn compile_decl(&mut self, file: &mut fs::File, var: Variable, expr: Option<Box<Expr>>, variables: &Vec<Variable>, initialized: &HashMap<Variable, bool>) -> Result<(), CompileError> {
+    fn compile_decl(&mut self, file: &mut fs::File, var: Variable, expr: Option<Box<Expr>>, variables: &Vec<Variable>, initialized: &mut HashMap<Variable, bool>) -> Result<(), CompileError> {
         if expr.is_some() {
             self.current_subtree = expr;
             self.compile_expr(file, variables, initialized)?;
@@ -69,7 +70,7 @@ impl Compiler {
         Ok(())
     }
 
-    fn compile_reassign(&mut self, file: &mut fs::File, var: Variable, expr: Box<Expr>, variables: &Vec<Variable>, initialized: &HashMap<Variable, bool>) -> Result<(), CompileError> {
+    fn compile_reassign(&mut self, file: &mut fs::File, var: Variable, expr: Box<Expr>, variables: &Vec<Variable>, initialized: &mut HashMap<Variable, bool>) -> Result<(), CompileError> {
         self.current_subtree = Some(expr);
         self.compile_expr(file, variables, initialized)?;
         let var_number = self.variable_numbers[&var];
@@ -79,7 +80,7 @@ impl Compiler {
         Ok(())
     }
 
-    fn compile_expr(&mut self, file: &mut fs::File, variables: &Vec<Variable>, initialized: &HashMap<Variable, bool>) -> Result<(), CompileError> {
+    fn compile_expr(&mut self, file: &mut fs::File, variables: &Vec<Variable>, initialized: &mut HashMap<Variable, bool>) -> Result<(), CompileError> {
         // В идеале здесь не должно быть клонирования, однако я просто
         // уже не знаю как по другому сделать((
         match *self.current_subtree.clone().unwrap() {
