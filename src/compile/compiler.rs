@@ -59,6 +59,7 @@ impl Compiler {
 
     fn compile_decl(&mut self, file: &mut fs::File, var: Variable, expr: Option<Box<Expr>>, variables: &Vec<Variable>, initialized: &mut HashMap<Variable, bool>) -> Result<(), CompileError> {
         if expr.is_some() {
+            initialized.insert(var.clone(), true);
             self.current_subtree = expr;
             self.compile_expr(file, variables, initialized)?;
             self.write_out(&[0x12], file)?;
@@ -71,6 +72,7 @@ impl Compiler {
     }
 
     fn compile_reassign(&mut self, file: &mut fs::File, var: Variable, expr: Box<Expr>, variables: &Vec<Variable>, initialized: &mut HashMap<Variable, bool>) -> Result<(), CompileError> {
+        initialized.insert(var.clone(), true);
         self.current_subtree = Some(expr);
         self.compile_expr(file, variables, initialized)?;
         let var_number = self.variable_numbers[&var];
@@ -136,8 +138,8 @@ impl Compiler {
                 }
             },
             Expr::Variable(var, loc) => {
-                dbg!(&var);
-                dbg!(initialized);
+                // dbg!(&var);
+                // dbg!(&initialized);
                 if !initialized.get(&var).unwrap() {
                     return Err(CompileError::UninitializedVar(loc));
                 }
