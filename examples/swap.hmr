@@ -2,6 +2,7 @@ let a = 5;
 let b;
 
 let temp = a;
+// Здесь будет ошибка...
 a = b;
 b = temp;
 

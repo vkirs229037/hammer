@@ -9,6 +9,7 @@ pub struct Lexer {
     file: String,
     line: usize,
     col: usize,
+    in_comment: bool,
 }
 
 impl Lexer {
@@ -19,6 +20,7 @@ impl Lexer {
             file,
             line: 0,
             col: 0,
+            in_comment: false,
         }
     }
 
@@ -27,6 +29,20 @@ impl Lexer {
         let mut source_iter = source.chars().peekable();
         let mut buf;
         while let Some(c) = source_iter.next() {
+            if self.in_comment {
+                match c {
+                    c if c == '\n' => {
+                        self.in_comment = false;
+                        self.line += 1;
+                        self.col = 0;
+                        continue;
+                    }
+                    _ => {
+                        self.col += 1;
+                        continue;
+                    }
+                }
+            }
             match c {
                 c if c == '\n' => { 
                     self.line += 1;
@@ -49,7 +65,17 @@ impl Lexer {
                 '+' => { self.push_token(TokenType::OpPlus); self.col += 1; }
                 '-' => { self.push_token(TokenType::OpMinus); self.col += 1; }
                 '*' => { self.push_token(TokenType::OpStar); self.col += 1; }
-                '/' => { self.push_token(TokenType::OpSlash); self.col += 1; }
+                '/' => {
+                    if let Some(next_c) = source_iter.peek() {
+                        if *next_c == '/' {
+                            self.in_comment = true;
+                            self.col += 2;
+                            continue;
+                        }
+                    }
+                    self.push_token(TokenType::OpSlash);
+                    self.col += 1;
+                }
                 '(' => { self.push_token(TokenType::ParenLeft); self.col += 1; }
                 ')' => { self.push_token(TokenType::ParenRight); self.col += 1; }
                 ';' => { self.push_token(TokenType::Semicolon); self.col += 1; }
