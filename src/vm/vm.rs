@@ -51,13 +51,13 @@ impl VM {
         while (i < len) {
             let val_type = const_table
                 .get(i)
-                .ok_or_else(|| BytecodeError::UnexpectedEof)?;
+                .ok_or(BytecodeError::UnexpectedEof)?;
             let size = *const_table
                 .get(i + 1)
-                .ok_or_else(|| BytecodeError::UnexpectedEof)?;
+                .ok_or(BytecodeError::UnexpectedEof)?;
             let value_bytes = const_table
                 .get((i + 2)..(i + 2 + size as usize))
-                .ok_or_else(|| BytecodeError::UnexpectedEof)?;
+                .ok_or(BytecodeError::UnexpectedEof)?;
             let value = f64::from_le_bytes(
                 value_bytes
                     .try_into()
@@ -84,23 +84,23 @@ impl VM {
     fn run_one_instr(&mut self) -> Result<(), InterpretationError> {
         let inst: Instruction = self.get_byte(0)?.try_into()?;
         match inst {
-            Instruction::NOP => {}
-            Instruction::PUSH => {
+            Instruction::Nop => {}
+            Instruction::Push => {
                 let index: u16 = self.next_2_bytes()?;
                 let val: Value = self.get_const(index as usize)?;
                 self.stack.push(val);
                 self.pc += 3;
             }
-            Instruction::ADD => {
+            Instruction::Add => {
                 exec_binop!(self, +);
             }
-            Instruction::SUB => {
+            Instruction::Sub => {
                 exec_binop!(self, -);
             }
-            Instruction::MUL => {
+            Instruction::Mul => {
                 exec_binop!(self, *);
             }
-            Instruction::DIV => {
+            Instruction::Div => {
                 let a = self.pop_stack()?;
                 let b = self.pop_stack()?;
                 if a == 0f64 {
@@ -109,34 +109,34 @@ impl VM {
                 self.stack.push(b / a);
                 self.pc += 1;
             }
-            Instruction::NEG => {
+            Instruction::Neg => {
                 let a = self.pop_stack()?;
                 self.stack.push(-a);
                 self.pc += 1;
             }
-            Instruction::EQ => {
+            Instruction::Eq => {
                 exec_binop!(self, ==);
             }
-            Instruction::NEQ => {
+            Instruction::Neq => {
                 exec_binop!(self, !=);
             }
-            Instruction::GR => {
+            Instruction::Gr => {
                 exec_binop!(self, >);
             }
-            Instruction::LS => {
+            Instruction::Ls => {
                 exec_binop!(self, <);
             }
-            Instruction::GE => {
+            Instruction::Ge => {
                 exec_binop!(self, >=);
             }
-            Instruction::LE => {
+            Instruction::Le => {
                 exec_binop!(self, <=);
             }
-            Instruction::JMP => {
+            Instruction::Jmp => {
                 let offset: u16 = self.next_2_bytes()?;
                 self.pc += offset as usize;
             }
-            Instruction::JF => {
+            Instruction::Jf => {
                 let offset: u16 = self.next_2_bytes()?;
                 let a = self.pop_stack()?;
                 if a == 0f64 {
@@ -145,11 +145,11 @@ impl VM {
                     self.pc += 3;
                 }
             }
-            Instruction::JBACK => {
+            Instruction::Jback => {
                 let offset: u16 = self.next_2_bytes()?;
                 self.pc -= offset as usize;
             }
-            Instruction::BIN => {
+            Instruction::Bin => {
                 let func_number: u16 = self.next_2_bytes()?;
                 match func_number {
                     // println
@@ -165,19 +165,17 @@ impl VM {
                 };
                 self.pc += 3;
             }
-            Instruction::LIV => {
+            Instruction::Liv => {
                 let idx = self.next_4_bytes()? as usize;
                 let val = self.pop_stack()?;
-                if (idx < self.variables.len()) {
-                    self.variables[idx] = val;
-                } else if (idx == self.variables.len()) {
-                    self.variables.push(val);
-                } else {
-                    panic!("Ошибка")
-                };
+                match idx {
+                    idx if idx < self.variables.len() => self.variables[idx] = val,
+                    idx if idx == self.variables.len() => self.variables.push(val),
+                    _ => panic!("Ошибка"),
+                }
                 self.pc += 5;
             }
-            Instruction::LFV => {
+            Instruction::Lfv => {
                 let idx = self.next_4_bytes()? as usize;
                 if (idx < self.variables.len()) {
                     let val = self.variables[idx];
@@ -187,12 +185,12 @@ impl VM {
                 };
                 self.pc += 5;
             }
-            Instruction::DBG => {
+            Instruction::Dbg => {
                 let a = self.pop_stack()?;
                 println!("{a:#}");
                 self.pc += 1;
             }
-            Instruction::HLT => {
+            Instruction::Hlt => {
                 self.running = false;
             }
         }
@@ -202,7 +200,7 @@ impl VM {
     fn get_byte(self: &VM, offset: usize) -> Result<u8, InterpretationError> {
         self.program
             .get(self.pc + offset)
-            .ok_or_else(|| InterpretationError::UnexpectedEndError)
+            .ok_or(InterpretationError::UnexpectedEndError)
             .copied()
     }
 
@@ -222,14 +220,14 @@ impl VM {
 
     fn get_const(self: &VM, index: usize) -> Result<Value, InterpretationError> {
         self.consts
-            .get(index as usize)
-            .ok_or_else(|| InterpretationError::BadConstsIndexError)
+            .get(index)
+            .ok_or(InterpretationError::BadConstsIndexError)
             .copied()
     }
 
     fn pop_stack(self: &mut VM) -> Result<Value, InterpretationError> {
         self.stack
             .pop()
-            .ok_or_else(|| InterpretationError::EmptyStackError)
+            .ok_or(InterpretationError::EmptyStackError)
     }
 }

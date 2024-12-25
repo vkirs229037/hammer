@@ -34,7 +34,7 @@ impl Lexer {
         while let Some(c) = source_iter.next() {
             if self.in_comment {
                 match c {
-                    c if c == '\n' => {
+                    '\n' => {
                         self.in_comment = false;
                         self.line += 1;
                         self.col = 0;
@@ -47,7 +47,7 @@ impl Lexer {
                 }
             }
             match c {
-                c if c == '\n' => {
+                '\n' => {
                     self.line += 1;
                     self.col = 0;
                 }
@@ -58,9 +58,9 @@ impl Lexer {
                     self.parse_ident(buf)?;
                     self.col += len;
                 }
-                c if c.is_digit(10) => {
+                c if c.is_ascii_digit() => {
                     buf = Self::collect_token(c, &mut source_iter, |c| {
-                        c.is_digit(10) || c == '.' || c == '-'
+                        c.is_ascii_digit() || c == '.' || c == '-'
                     });
                     let len = buf.len();
                     self.parse_numlit(buf)?;

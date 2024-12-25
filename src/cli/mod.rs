@@ -43,19 +43,18 @@ impl Cli {
     }
 
     pub fn new(args: &mut Args) -> Result<Self, CliError> {
-        let cli;
         let _program = args
             .next()
             .expect("Невозможная ситуация: нет первого аргумента командной строки");
-        let command = args.next().ok_or_else(|| CliError::NoCommand)?;
+        let command = args.next().ok_or(CliError::NoCommand)?;
         let next_arg = args.next();
         let re = Regex::new(r"\..*$").expect("\\..*$ является верным регулярным выражением");
-        if next_arg.as_ref().is_some_and(|arg| arg == "-b") {
+        let cli = if next_arg.as_ref().is_some_and(|arg| arg == "-b") {
             if (command != "run") {
                 return Err(CliError::IncorrectParam(command, next_arg.unwrap()));
             }
-            let in_file = args.next().ok_or_else(|| CliError::NoInputFile)?;
-            cli = Self {
+            let in_file = args.next().ok_or(CliError::NoInputFile)?;
+            Self {
                 command: Command::Run(RunType::Bytecode),
                 in_file: Some(in_file.clone()),
                 out_file: None,
@@ -96,12 +95,12 @@ impl Cli {
                 }
                 _ => return Err(CliError::UnknownCommand(command)),
             }
-            cli = Self {
+            Self {
                 command: com_type,
                 in_file,
                 out_file,
             }
-        }
+        };
         Ok(cli)
     }
 
@@ -197,18 +196,17 @@ impl Cli {
     }
 
     fn interp(&self, b: bool) -> Result<(), HammerError> {
-        let path;
-        if b {
-            path = self
+        let path = if b {
+            self
                 .in_file
                 .clone()
-                .expect("При запуске с -b значение in_file всегда задано");
+                .expect("При запуске с -b значение in_file всегда задано")
         } else {
-            path = self
+            self
                 .out_file
                 .clone()
-                .expect("При запуске значение out_file всегда задано");
-        }
+                .expect("При запуске значение out_file всегда задано")
+        };
         let mut file = match fs::OpenOptions::new().read(true).open(path.clone()) {
             Ok(f) => f,
             Err(e) => return Err(HammerError::Compile(CompileError::FileError(path, e))),

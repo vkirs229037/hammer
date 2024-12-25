@@ -45,14 +45,14 @@ impl Compiler {
             match stmt {
                 Stmt::Expr(e) => {
                     self.current_subtree = Some(e);
-                    self.compile_expr(&mut file, &variables, &mut initialized)?;
+                    self.compile_expr(&mut file, &mut initialized)?;
                 }
                 Stmt::Block(_) => todo!("Блоки выражений"),
                 Stmt::Decl(var, expr) => {
-                    self.compile_decl(&mut file, var, expr, &variables, &mut initialized)?
+                    self.compile_decl(&mut file, var, expr, &mut initialized)?
                 }
                 Stmt::Reassign(var, expr) => {
-                    self.compile_reassign(&mut file, var, expr, &variables, &mut initialized)?
+                    self.compile_reassign(&mut file, var, expr, &mut initialized)?
                 }
             };
         }
@@ -71,13 +71,12 @@ impl Compiler {
         file: &mut fs::File,
         var: Variable,
         expr: Option<Box<Expr>>,
-        variables: &Vec<Variable>,
         initialized: &mut HashMap<Variable, bool>,
     ) -> Result<(), CompileError> {
         if expr.is_some() {
             initialized.insert(var.clone(), true);
             self.current_subtree = expr;
-            self.compile_expr(file, variables, initialized)?;
+            self.compile_expr(file, initialized)?;
             self.write_out(&[0x12], file)?;
             let idx: [u8; 4] = u32::to_le_bytes(self.last_variable_number);
             self.write_out(&idx, file)?;
@@ -94,12 +93,11 @@ impl Compiler {
         file: &mut fs::File,
         var: Variable,
         expr: Box<Expr>,
-        variables: &Vec<Variable>,
         initialized: &mut HashMap<Variable, bool>,
     ) -> Result<(), CompileError> {
         initialized.insert(var.clone(), true);
         self.current_subtree = Some(expr);
-        self.compile_expr(file, variables, initialized)?;
+        self.compile_expr(file, initialized)?;
         let var_number = self.variable_numbers[&var];
         self.write_out(&[0x12], file)?;
         let idx: [u8; 4] = u32::to_le_bytes(var_number);
@@ -110,7 +108,6 @@ impl Compiler {
     fn compile_expr(
         &mut self,
         file: &mut fs::File,
-        variables: &Vec<Variable>,
         initialized: &mut HashMap<Variable, bool>,
     ) -> Result<(), CompileError> {
         // В идеале здесь не должно быть клонирования, однако я просто
@@ -118,9 +115,9 @@ impl Compiler {
         match *self.current_subtree.clone().unwrap() {
             Expr::Binary(left, op, right) => {
                 self.current_subtree = Some(left);
-                self.compile_expr(file, variables, initialized);
+                self.compile_expr(file, initialized);
                 self.current_subtree = Some(right);
-                self.compile_expr(file, variables, initialized);
+                self.compile_expr(file, initialized);
                 match op.ttype {
                     TokenType::OpPlus => self.write_out(&[0x02], file),
                     TokenType::OpMinus => self.write_out(&[0x03], file),
@@ -131,7 +128,7 @@ impl Compiler {
             }
             Expr::Unary(op, expr) => {
                 self.current_subtree = Some(expr);
-                self.compile_expr(file, variables, initialized);
+                self.compile_expr(file, initialized);
                 match op.ttype {
                     TokenType::OpMinus => self.write_out(&[0x06], file),
                     _ => Err(CompileError::ExpectedOp(op.loc.clone())),
@@ -139,7 +136,7 @@ impl Compiler {
             }
             Expr::Grouping(expr) => {
                 self.current_subtree = Some(expr);
-                self.compile_expr(file, variables, initialized)
+                self.compile_expr(file, initialized)
             }
             Expr::Literal(val) => {
                 let index = self.const_table.len();
@@ -159,7 +156,7 @@ impl Compiler {
             }
             Expr::Func(func, expr) => {
                 self.current_subtree = Some(expr);
-                self.compile_expr(file, variables, initialized);
+                self.compile_expr(file, initialized);
                 match func.ttype {
                     TokenType::Builtin(bin) => {
                         self.write_out(&[0x11], file)?;

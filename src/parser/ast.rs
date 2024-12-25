@@ -5,7 +5,7 @@ use crate::parser::tokens::*;
 
 #[derive(Clone, Debug)]
 pub enum Stmt {
-    Block(Vec<Box<Self>>),
+    Block(Vec<Self>),
     Expr(Box<Expr>),
     Decl(Variable, Option<Box<Expr>>),
     Reassign(Variable, Box<Expr>),
@@ -91,12 +91,12 @@ impl AstBuilder {
     }
 
     fn decl(&mut self) -> Result<Stmt, ParseError> {
-        let name;
+        
         let token = &self.consume()?.clone();
-        match &token.ttype {
-            TokenType::Ident(id) => name = id,
+        let name = match &token.ttype {
+            TokenType::Ident(id) => id,
             _ => return Err(ParseError::ExpectedIdent(self.prev().loc.clone())),
-        }
+        };
         if self.match_ttype(&[TokenType::Assign])? {
             let expr = self.expr()?;
             let var = Variable {
@@ -125,12 +125,12 @@ impl AstBuilder {
         if !self.match_ttype(&[TokenType::Assign])? {
             return Err(ParseError::ExpectedAssign(self.prev().loc.clone()));
         }
-        let var;
+        
         let found_var = self.variables.iter().find(|var| var.name == *varname);
-        match found_var {
+        let var = match found_var {
             None => return Err(ParseError::UnknownVariable(loc.clone())),
-            Some(v) => var = v.clone(),
-        }
+            Some(v) => v.clone(),
+        };
         let expr = self.expr()?;
         Ok(Stmt::Reassign(var, Box::new(expr)))
     }
@@ -186,7 +186,7 @@ impl AstBuilder {
             return Ok(Expr::Unary(op, Box::new(expr)));
         }
 
-        Ok(self.primary()?)
+        self.primary()
     }
 
     fn primary(&mut self) -> Result<Expr, ParseError> {
