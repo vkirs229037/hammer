@@ -141,8 +141,6 @@ impl Compiler {
                 }
             },
             Expr::Variable(var, loc) => {
-                // dbg!(&var);
-                // dbg!(&initialized);
                 if !initialized.get(&var).unwrap() {
                     return Err(CompileError::UninitializedVar(loc));
                 }
