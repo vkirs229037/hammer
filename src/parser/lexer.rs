@@ -45,6 +45,7 @@ impl Lexer {
                     self.parse_numlit(buf)?;
                     self.col += len;
                 },
+                '=' => { self.push_token(TokenType::Assign); self.col += 1; }
                 '+' => { self.push_token(TokenType::OpPlus); self.col += 1; }
                 '-' => { self.push_token(TokenType::OpMinus); self.col += 1; }
                 '*' => { self.push_token(TokenType::OpStar); self.col += 1; }
@@ -64,16 +65,24 @@ impl Lexer {
     }
 
     fn parse_ident(&mut self, buf: String) -> Result<(), LexError> {
+        let loc = Loc::new(self.file.clone(), self.line, self.col);
         let token = match buf.as_str() {
             "abs" => Ok(Token::new(
                 TokenType::Builtin(BIn::Abs),
-                Loc::new(self.file.clone(), self.line, self.col)
+                loc,
             )),
             "println" => Ok(Token::new(
                 TokenType::Builtin(BIn::Println),
-                Loc::new(self.file.clone(), self.line, self.col)
+                loc,
             )),
-            _ => Err(LexError::UnknownLexem(Loc::new(self.file.clone(), self.line, self.col)))
+            "let" => Ok(Token::new(
+                TokenType::Keyword(Kw::Let),
+                loc,
+            )),
+            id => Ok(Token::new(
+                TokenType::Ident(id.to_string()),
+                loc,
+            )),
         }?;
         self.tokens.push(token);
         Ok(())

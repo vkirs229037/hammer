@@ -5,6 +5,8 @@ pub enum TokenType {
     Ident(String),
     Builtin(BIn),
     NumLit(f64),
+    Keyword(Kw),
+    Assign,
     OpPlus,
     OpMinus,
     OpStar,
@@ -19,6 +21,11 @@ pub enum TokenType {
 pub enum BIn {
     Println,
     Abs,
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum Kw {
+    Let,
 }
 
 use TokenType::*;
@@ -71,6 +78,8 @@ impl fmt::Display for Token {
             Ident(id) => write!(f, "[{loc}] {id}"),
             NumLit(lit) => write!(f, "[{loc}] {lit}"),
             Builtin(b) => write!(f, "[{loc}] {b}"),
+            Keyword(kw) => write!(f, "[{loc}] {kw}"),
+            Assign => write!(f, "[{loc}] ="),
             OpPlus => write!(f, "[{loc}] +"),
             OpMinus => write!(f, "[{loc}] -"),
             OpStar => write!(f, "[{loc}] *"),
@@ -88,6 +97,14 @@ impl fmt::Display for BIn {
         match self {
             Self::Abs => write!(f, "builtin abs"),
             Self::Println => write!(f, "builtin println"),
+        }
+    }
+}
+
+impl fmt::Display for Kw {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Let => write!(f, "keyword let"),
         }
     }
 }

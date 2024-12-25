@@ -20,6 +20,7 @@ pub struct VM {
     stack: Vec<Value>,
     program: Vec<u8>,
     consts: Vec<Value>,
+    variables: Vec<Value>,
     pc: usize,
     running: bool,
 }
@@ -33,6 +34,7 @@ impl VM {
             stack: vec![],
             program,
             consts: vec![],
+            variables: vec![],
             pc: 0,
             running: false,
         };
@@ -154,6 +156,31 @@ impl VM {
                     _ => return Err(InterpretationError::UnknownBuiltin)
                 };
                 self.pc += 3;
+            },
+            Instruction::LIV => {
+                let idx = self.next_4_bytes()? as usize;
+                let val = self.pop_stack()?;
+                if (idx < self.variables.len()) {
+                    self.variables[idx] = val;
+                }
+                else if (idx == self.variables.len()) {
+                    self.variables.push(val);
+                }
+                else {
+                    panic!("Ошибка")
+                };
+                self.pc += 5;
+            },
+            Instruction::LFV => {
+                let idx = self.next_4_bytes()? as usize;
+                if (idx < self.variables.len()) {
+                    let val = self.variables[idx];
+                    self.stack.push(val);
+                }
+                else {
+                    panic!("Ошибка")
+                };
+                self.pc += 5;
             }
             Instruction::DBG => {
                 let a = self.pop_stack()?;
@@ -177,6 +204,14 @@ impl VM {
         let b1: u8 = self.get_byte(1)?;
         let b2: u8 = self.get_byte(2)?;
         Ok(u16::from_ne_bytes([b1, b2]))
+    }
+
+    fn next_4_bytes(&self) -> Result<u32, InterpretationError> {
+        let b1: u8 = self.get_byte(1)?;
+        let b2: u8 = self.get_byte(2)?;
+        let b3: u8 = self.get_byte(3)?;
+        let b4: u8 = self.get_byte(4)?;
+        Ok(u32::from_ne_bytes([b1, b2, b3, b4]))
     }
 
     fn get_const(self: &VM, index: usize) -> Result<Value, InterpretationError> {
