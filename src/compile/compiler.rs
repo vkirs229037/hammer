@@ -28,7 +28,7 @@ impl Compiler {
         Ok(compiler)
     }
 
-    pub fn compile(&mut self, tree: Vec<Stmt>, variables: Vec<Variable>, initialized: HashMap<Variable, bool>) -> Result<(), CompileError> {
+    pub fn compile(&mut self, tree: Vec<Stmt>, variables: Vec<Variable>) -> Result<(), CompileError> {
         let path = path::Path::new(&self.file_name);
         let mut file = fs::OpenOptions::new().write(true)
                                              .create(true)
