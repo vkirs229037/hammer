@@ -66,6 +66,9 @@ impl Compiler {
             let idx: [u8; 4] = u32::to_le_bytes(self.last_variable_number);
             self.write_out(&idx, file)?;
         }
+        else {
+            initialized.insert(var.clone(), false);
+        }
         self.variable_numbers.insert(var, self.last_variable_number);
         self.last_variable_number += 1;
         Ok(())
